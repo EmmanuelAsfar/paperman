@@ -1,62 +1,75 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:VisualElement name="ControlPanel" style="height: 100%; width: 30%; min-width: 250px; position: relative; min-height: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; background-color: rgb(207, 207, 207); padding-left: 10px; padding-right: 10px; padding-top: 15px; padding-bottom: 10px; max-width: 350px; opacity: 0.9;">
-        <ui:VisualElement>
-            <ui:Label text="Choose a model" display-tooltip-when-elided="true" />
-            <ui:Button text="Import a 3D model from file..." display-tooltip-when-elided="true" name="ImportModelFromFile" />
-            <ui:Button text="Pick an existing model" display-tooltip-when-elided="true" name="PickInLibrary" style="white-space: normal;" />
-        </ui:VisualElement>
-        <ui:VisualElement>
-            <ui:Label text="Simplify your model&#10;" display-tooltip-when-elided="true" />
-            <ui:TextField picking-mode="Ignore" label="Current model face count" value="1200" text="1200" readonly="true" focusable="false" name="FaceCount" style="flex-direction: row; justify-content: space-around; align-items: stretch;" />
+    <ui:VisualElement style="justify-content: flex-start; height: auto; flex-direction: row; flex-grow: 1;">
+        <ui:VisualElement name="ControlPanel" style="height: 100%; width: 30%; min-width: 250px; position: relative; min-height: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; background-color: rgb(207, 207, 207); padding-left: 10px; padding-right: 10px; padding-top: 15px; padding-bottom: 10px; max-width: 350px; opacity: 0.9;">
             <ui:VisualElement>
-                <ui:Slider picking-mode="Ignore" label="Target face count" value="300" high-value="1000" inverted="false" low-value="1" direction="Horizontal" usage-hints="None" tooltip="Select the target number of faces for your model" name="TargetFaces" show-input-field="true" focusable="true" page-size="1" />
+                <ui:Label text="Choose a model" display-tooltip-when-elided="true" style="-unity-font-style: bold;" />
+                <ui:Button text="Import a 3D model from file..." display-tooltip-when-elided="true" name="ImportModelFromFile" />
+                <ui:Button text="Pick an existing model" display-tooltip-when-elided="true" name="PickInLibrary" style="white-space: normal;" />
             </ui:VisualElement>
-            <ui:Button text="Simplify my model" display-tooltip-when-elided="true" name="ReduceMesh" />
+            <ui:VisualElement>
+                <ui:Label text="Simplify your model&#10;" display-tooltip-when-elided="true" style="-unity-font-style: bold; padding-top: 15px;" />
+                <ui:TextField picking-mode="Ignore" label="Current model face count" value="1200" text="1200" readonly="true" focusable="false" name="FaceCount" style="flex-direction: row; justify-content: space-around; align-items: stretch;" />
+                <ui:VisualElement>
+                    <ui:Slider picking-mode="Ignore" label="Target face count" value="300" high-value="1000" inverted="false" low-value="1" direction="Horizontal" usage-hints="None" tooltip="Select the target number of faces for your model" name="TargetFaces" show-input-field="true" focusable="true" page-size="1" />
+                </ui:VisualElement>
+                <ui:Button text="Simplify my model" display-tooltip-when-elided="true" name="ReduceMesh" />
+            </ui:VisualElement>
+            <ui:VisualElement name="SwatchPanel">
+                <ui:Label text="Choose a color swatch" display-tooltip-when-elided="true" style="-unity-font-style: bold; padding-top: 15px;" />
+                <ui:VisualElement style="flex-direction: row; justify-content: space-around; margin-bottom: 5px; margin-top: 5px;">
+                    <ui:VisualElement style="width: auto; align-items: stretch; height: auto; flex-direction: row; justify-content: center;">
+                        <ui:Button display-tooltip-when-elided="true" name="Color0" style="background-color: rgb(82, 20, 20); width: 35px; height: 35px; position: relative; left: auto;" />
+                        <ui:Button display-tooltip-when-elided="true" name="Color1" style="background-color: rgb(173, 45, 71); width: 35px; height: 35px; position: relative; left: auto;" />
+                        <ui:Button display-tooltip-when-elided="true" name="Color2" style="background-color: rgb(178, 100, 36); width: 35px; height: 35px; position: relative; left: auto;" />
+                        <ui:Button display-tooltip-when-elided="true" name="Color3" style="background-color: rgb(224, 172, 16); width: 35px; height: 35px; position: relative; left: auto;" />
+                        <ui:Button display-tooltip-when-elided="true" name="Color4" style="background-color: rgb(139, 144, 25); width: 35px; height: 35px; position: relative; left: auto;" />
+                        <ui:Button display-tooltip-when-elided="true" name="Color5" style="background-color: rgb(78, 89, 15); width: 35px; height: 35px; position: relative; left: auto;" />
+                    </ui:VisualElement>
+                    <ui:Button text="Shuffle" display-tooltip-when-elided="true" name="ShuffleSwatch" style="align-items: auto;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="margin-left: 5px; margin-right: 5px; height: 25px; flex-direction: row; justify-content: center; align-items: stretch;">
+                    <ui:Button text="&lt; Previous swatch" display-tooltip-when-elided="true" name="PreviousSwatch" style="width: 120px; position: relative; white-space: nowrap;" />
+                    <ui:Button text="Next swatch &gt;" display-tooltip-when-elided="true" name="NextSwatch" style="width: 120px; position: relative; left: auto;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement>
+                <ui:Label text="Artcraft settings" display-tooltip-when-elided="true" style="margin-top: 0; -unity-font-style: bold; padding-top: 15px;" />
+                <ui:Toggle label="2D Paper sculpture" value="true" name="Create2D" />
+                <ui:Toggle label="3D Printer model" value="true" name="Create25D" />
+                <ui:Slider picking-mode="Ignore" label="Model Size (cm)" value="35" high-value="100" show-input-field="true" low-value="2" name="ModelSize" />
+                <ui:Toggle label="Print on color sheets" name="SortColors" value="true" />
+                <ui:Slider picking-mode="Ignore" label="Page width (mm)" value="210" high-value="1000" show-input-field="true" low-value="1" name="PageWidth" page-size="1" />
+                <ui:Slider picking-mode="Ignore" label="Page height (mm)" value="297" high-value="1000" name="PageHeight" low-value="1" page-size="1" show-input-field="true" />
+                <ui:Slider picking-mode="Ignore" label="Width margins (mm)" value="0" high-value="50" show-input-field="true" name="HeightMargin" page-size="1" />
+                <ui:Slider picking-mode="Ignore" label="Height margins (mm)" value="0" high-value="50" show-input-field="true" name="WidthMargin" page-size="1" />
+                <ui:Button text="Preview my artcraft" display-tooltip-when-elided="true" name="GeneratePreview" style="margin-top: 15px;" />
+                <ui:Button text="Generate my artcraft" display-tooltip-when-elided="true" name="GenerateArtcraft" />
+                <ui:Button text="Save files in directory..." display-tooltip-when-elided="true" name="SaveArtcraft" />
+            </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="SwatchPanel">
-            <ui:Label text="Model swatch" display-tooltip-when-elided="true" />
-            <ui:VisualElement style="width: 300px; align-items: stretch; margin-left: 15px; margin-right: 15px; height: 50px; flex-direction: row; justify-content: center;">
-                <ui:Button display-tooltip-when-elided="true" name="Color0" style="background-color: rgb(82, 20, 20); width: 40px; height: 40px; position: relative; left: auto;" />
-                <ui:Button display-tooltip-when-elided="true" name="Color1" style="background-color: rgb(173, 45, 71); width: 40px; height: 40px; position: relative; left: auto;" />
-                <ui:Button display-tooltip-when-elided="true" name="Color2" style="background-color: rgb(178, 100, 36); width: 40px; height: 40px; position: relative; left: auto;" />
-                <ui:Button display-tooltip-when-elided="true" name="Color3" style="background-color: rgb(224, 172, 16); width: 40px; height: 40px; position: relative; left: auto;" />
-                <ui:Button display-tooltip-when-elided="true" name="Color4" style="background-color: rgb(139, 144, 25); width: 40px; height: 40px; position: relative; left: auto;" />
-                <ui:Button display-tooltip-when-elided="true" name="Color5" style="background-color: rgb(78, 89, 15); width: 40px; height: 40px; position: relative; left: auto;" />
+        <ui:VisualElement name="NavigationPanel" style="align-items: stretch; flex-direction: column; justify-content: space-between; flex-grow: 1; flex-wrap: nowrap; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">
+            <ui:VisualElement name="ActionPanel" style="flex-direction: row; justify-content: space-between;">
+                <ui:VisualElement name="SwitchPanel" style="flex-direction: row; height: 50px;">
+                    <ui:Button text="View Model" display-tooltip-when-elided="true" name="ViewModel" style="width: 150px; position: relative; left: auto; opacity: 0.7; height: auto;" />
+                    <ui:Button text="Artcraft Preview" display-tooltip-when-elided="true" name="ViewPreview" style="width: 150px; position: relative; left: auto; opacity: 0.7;" />
+                    <ui:Button text="Paper Artcraft" display-tooltip-when-elided="true" name="View2D" style="width: 150px; position: relative; left: auto; opacity: 0.7;" />
+                    <ui:Button text="3D Printing" display-tooltip-when-elided="true" name="View25D" style="width: 150px; position: relative; left: auto; opacity: 0.7;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="align-items: stretch; width: 150px; justify-content: flex-start; flex-direction: row-reverse;">
+                    <ui:Button text="Rotate model 90°" display-tooltip-when-elided="true" name="RotateModel" style="opacity: 0.7; flex-grow: 1; position: absolute; width: 150px; height: 50px;" />
+                    <ui:Button text="Switch Font / Back page view" display-tooltip-when-elided="true" name="SwitchFrontBack" style="width: 150px; height: 50px; opacity: 0.7; flex-wrap: nowrap; white-space: normal; flex-grow: 1; position: absolute;" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement style="margin-left: 5px; margin-right: 5px; height: 25px; flex-direction: row; justify-content: center; align-items: stretch;">
-                <ui:Button text="&lt; Previous swatch" display-tooltip-when-elided="true" name="PreviousSwatch" style="width: 120px; position: relative; white-space: nowrap;" />
-                <ui:Button text="Next swatch &gt;" display-tooltip-when-elided="true" name="NextSwatch" style="width: 120px; position: relative; left: auto;" />
+            <ui:VisualElement style="flex-grow: 1; align-items: flex-end; justify-content: flex-end; flex-direction: row;">
+                <ui:Slider picking-mode="Ignore" label="Explode preview" value="8" high-value="50" name="ExplodeAmount" show-input-field="false" direction="Vertical" page-size="0.1" style="flex-direction: column-reverse; height: 50%; margin-top: 15px; margin-right: 20px; align-items: center;" />
             </ui:VisualElement>
-            <ui:Toggle label="Similar tones" name="SimilarTones" style="width: 55%; left: 0; margin-right: 3px; flex-direction: row-reverse; margin-left: 10px;" />
-        </ui:VisualElement>
-        <ui:VisualElement>
-            <ui:Label text="Artcraft settings" display-tooltip-when-elided="true" style="margin-top: 0;" />
-            <ui:Toggle label="2D Paper sculpture" value="true" name="Create2D" />
-            <ui:Toggle label="3D Printer model" value="true" name="Create25D" />
-            <ui:Slider picking-mode="Ignore" label="Model Size (cm)" value="35" high-value="100" show-input-field="true" low-value="2" name="ModelSize" />
-            <ui:Toggle label="Print on color sheets" name="SortColors" value="true" />
-            <ui:Slider picking-mode="Ignore" label="Page width (mm)" value="210" high-value="1000" show-input-field="true" low-value="1" name="PageWidth" page-size="1" />
-            <ui:Slider picking-mode="Ignore" label="Page height (mm)" value="297" high-value="1000" name="PageHeight" low-value="1" page-size="1" show-input-field="true" />
-            <ui:Slider picking-mode="Ignore" label="Width margins (mm)" value="0" high-value="50" show-input-field="true" name="HeightMargin" page-size="1" />
-            <ui:Slider picking-mode="Ignore" label="Height margins (mm)" value="0" high-value="50" show-input-field="true" name="WidthMargin" page-size="1" />
-            <ui:Button text="Preview my artcraft" display-tooltip-when-elided="true" name="GeneratePreview" />
-            <ui:Button text="Generate my artcraft" display-tooltip-when-elided="true" name="GenerateArtcraft" />
-            <ui:Button text="Save files in directory..." display-tooltip-when-elided="true" name="SaveArtcraft" />
         </ui:VisualElement>
     </ui:VisualElement>
-    <ui:VisualElement name="TaskBar" style="width: 100%; height: 24px; background-color: rgba(197, 197, 197, 0.76); position: relative;">
-        <ui:VisualElement name="ProgressAmount" style="height: 25px; width: 0; background-color: rgba(214, 214, 214, 0.74); align-items: auto; justify-content: flex-start; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 2px; margin-right: 2px; margin-top: 2px; margin-bottom: 2px;" />
-        <ui:Button text="Cancel" display-tooltip-when-elided="true" name="Cancel" style="width: 50px; -unity-text-align: middle-center; justify-content: space-around; white-space: nowrap; margin-bottom: 1px; position: absolute; margin-top: 2px;" />
-        <ui:Label text="Task progress " display-tooltip-when-elided="true" name="ProgressMessage" style="align-items: auto; height: 100%; justify-content: flex-start; -unity-text-align: middle-left; position: absolute; width: 100px; left: 60px;" />
-    </ui:VisualElement>
-    <ui:VisualElement name="ViewsPanel" style="position: absolute; left: 30%; width: 70%; height: 50px; padding-left: 0; padding-top: 0; justify-content: flex-start; margin-top: 15px; padding-right: 0; padding-bottom: 0; flex-direction: row; top: 0;">
-        <ui:Button text="View Model" display-tooltip-when-elided="true" name="ViewModel" style="width: 150px; position: relative; left: auto; opacity: 0.7;" />
-        <ui:Button text="Artcraft Preview" display-tooltip-when-elided="true" name="ViewPreview" style="width: 150px; position: relative; left: auto; opacity: 0.7;" />
-        <ui:Button text="Paper Artcraft" display-tooltip-when-elided="true" name="View2D" style="width: 150px; position: relative; left: auto; opacity: 0.7;" />
-        <ui:Button text="3D Printing" display-tooltip-when-elided="true" name="View25D" style="width: 150px; position: relative; left: auto; opacity: 0.7;" />
-    </ui:VisualElement>
-    <ui:VisualElement name="NavigationPanel" style="position: absolute; align-items: flex-end; width: 15%; height: 100%; top: 0; left: 85%; right: auto; padding-left: 10px; padding-right: 10px; padding-top: 15px; padding-bottom: 10px; min-width: auto; flex-direction: column; justify-content: flex-start;">
-        <ui:Button text="Rotate model 90°" display-tooltip-when-elided="true" name="RotateModel" style="height: 50px; opacity: 0.7;" />
-        <ui:Slider picking-mode="Ignore" label="Explode preview" value="8" high-value="50" name="ExplodeAmount" show-input-field="false" direction="Vertical" page-size="0.1" style="flex-direction: column; height: 200px; justify-content: center; align-items: center; margin-top: 15px; margin-right: 20px;" />
+    <ui:VisualElement name="TaskBar" style="width: 100%; height: 35px; background-color: rgba(197, 197, 197, 0.76); position: relative; justify-content: space-between; flex-direction: row; padding-top: 4px; padding-bottom: 4px;">
+        <ui:Button text="Cancel" display-tooltip-when-elided="true" name="Cancel" />
+        <ui:VisualElement style="width: 100%; padding-right: 10px;">
+            <ui:VisualElement name="ProgressAmount" style="height: 100%; width: 100%; background-color: rgba(85, 156, 98, 0.93); align-items: auto; justify-content: space-between; margin-left: 4px; margin-right: 4px; margin-top: 3px; margin-bottom: 3px; padding-right: 0;" />
+            <ui:Label text="Task progress " display-tooltip-when-elided="true" name="ProgressMessage" style="align-items: auto; height: 100%; justify-content: flex-start; -unity-text-align: middle-left; position: absolute; width: 100px; left: 0; margin-left: 15px;" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -222,13 +222,25 @@ namespace Unfolder
             //return LoadModel(filePath);
         }
 
-        public static void ExportFiles(String dirPath, String filePath)
+        public static List<Color> GetSwatch(GameObject go)
+        {
+            var swatch = new List<Color>();
+            foreach (var renderer in go.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                int i = 0;
+                foreach (var material in renderer.materials)
+                {
+                    swatch.Add(material.color);
+                    i++;
+                }
+            }
+            return swatch;
+        }
+
+        public static void ZipFiles(String dirPath, String filePath)
         {
             if (File.Exists(filePath)) File.Delete(filePath);
             ZipFile.CreateFromDirectory(dirPath, filePath);
-            //NativeFilePicker.RequestPermission();
-            //NativeFilePicker.Permission permission = NativeFilePicker.ExportMultipleFiles(paths.ToArray(), (success) => Debug.Log("Files exported: " + success));
-            //FileBrowser.SaveFile("Save artcraft files", ".", "Artcraft", new ExtensionFilter[]{ new ExtensionFilter("Zip File", ".zip") });
         }
     }
 }

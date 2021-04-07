@@ -303,7 +303,7 @@ namespace NestingLibPort
                 operationsPerformed++;
                 Debug.Log("Nesting shape "+operationsPerformed+" / "+totalOperations);
                 taskProgress.progressAmount = (1.0f * operationsPerformed  / totalOperations);
-                if (taskProgress.requestInterruption) throw new ThreadInterruptedException("Operation Nesting - (NFP generation) cancelled by user");
+                if (taskProgress.ShouldInterrupt()) throw new ThreadInterruptedException("Operation Nesting - (NFP generation) cancelled by user");
                 ParallelData dataTemp = NfpUtil.nfpGenerator(nfpPair, config);
                 generatedNfp.Add(dataTemp);
             }

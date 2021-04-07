@@ -21,13 +21,15 @@ namespace Unfolder {
         // Pour model
         [Range(0, 1)]
         public float polyReduceFactor = 1f;
+
+        [Range(500, 10000)]
+        public int maxReduceFaces = 2000;
+
         public bool acceptMixedMaterials = true;
         [Range(3, 100)]
         public float modelSize = 40f; // Size of the target model (diagonal)
         [Range(0, 5)]
         public float explodeAmount = 1f; // Size of the target model (diagonal)
-        [Range(0, 50)]
-        public int swatchCount = 100;
 
         // Pour nesting and layout
         [Range(0.1f, 1)]
@@ -59,6 +61,8 @@ namespace Unfolder {
         [Range(0, 0.5f)]
         public float foldThickness = 0.08f;
 
+        public UnityEngine.Color errorColor, warningColor, okColor;
+
         public GameObject originalModel;
         public GameObject currentModel;
         private Pattern currentPattern;
@@ -73,13 +77,11 @@ namespace Unfolder {
         public ViewMode mode;
 
         private bool requestBuild3D, requestUnfold;
-        private bool isComputing;
         private bool create2D;
         private bool create25D;
         private int targetFaces;
         private int currentFaces;
         private int originalFaces;
-        private int currentSwatchId;
 
         private string modelName;
         private string savePath;
@@ -89,88 +91,63 @@ namespace Unfolder {
 
         private TaskProgress taskProgress;
         private bool parameterChanged;
-        private List<UnityEngine.Color[]> swatches;
 
-        private ControlPanel controlPanel;
+        private MainControlPanel mainPanel;
+        private ColorPalette palette;
 
         private VisualElement rootPanel;
         public GameObject viewer2D, viewer3D, viewer25D;
 
         void OnEnable()
         {
+            palette = new ColorPalette(MainControlPanel.colorCount);
+            palette.InitNicePalette();
+
             rootPanel = GetComponent<UIDocument>().rootVisualElement;
-            controlPanel = new ControlPanel(rootPanel);
-            controlPanel.ImportModelFromFile.RegisterCallback<ClickEvent>(ev => ImportModelFromFile(false));
-            controlPanel.RotateModel.RegisterCallback<ClickEvent>(ev => RotateModel());
-            controlPanel.PickInLibrary.RegisterCallback<ClickEvent>(ev => PickInLibrary());
-            controlPanel.ReduceMesh.RegisterCallback<ClickEvent>(ev => ReduceMesh());
-            controlPanel.GeneratePreview.RegisterCallback<ClickEvent>(ev => GeneratePreview());
-            controlPanel.GenerateArtcraft.RegisterCallback<ClickEvent>(ev => GenerateArtcraft());
-            controlPanel.SaveArtcraft.RegisterCallback<ClickEvent>(ev => SaveArtcraft());
-            controlPanel.Cancel.RegisterCallback<ClickEvent>(ev => Cancel());
-            controlPanel.ViewModel.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model));
-            controlPanel.ViewPreview.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model3D));
-            controlPanel.View2D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model2D));
-            controlPanel.View25D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model25D));
+            mainPanel = new MainControlPanel(rootPanel, palette);
 
-            controlPanel.ModelSize.RegisterValueChangedCallback(x => UpdateModelSize(x.newValue));
-            controlPanel.ExplodeAmount.RegisterValueChangedCallback(x => UpdateExplodeLevel(x.newValue));
+            mainPanel.ImportModelFromFile.RegisterCallback<ClickEvent>(ev => ImportModelFromFile(false));
+            mainPanel.RotateModel.RegisterCallback<ClickEvent>(ev => RotateModel());
+            mainPanel.PickInLibrary.RegisterCallback<ClickEvent>(ev => PickInLibrary());
+            mainPanel.ReduceMesh.RegisterCallback<ClickEvent>(ev => ReduceMesh());
+            mainPanel.GeneratePreview.RegisterCallback<ClickEvent>(ev => GeneratePreview());
+            mainPanel.GenerateArtcraft.RegisterCallback<ClickEvent>(ev => GenerateArtcraft());
+            mainPanel.SaveArtcraft.RegisterCallback<ClickEvent>(ev => SaveArtcraft());
+            mainPanel.Cancel.RegisterCallback<ClickEvent>(ev => Cancel());
+            mainPanel.ViewModel.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model));
+            mainPanel.ViewPreview.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model3D));
+            mainPanel.View2D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model2D));
+            mainPanel.View25D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model25D));
+            mainPanel.SwitchFrontBack.RegisterCallback<ClickEvent>(ev => SwitchFrontBack());
 
-            controlPanel.NextSwatch.RegisterCallback<ClickEvent>(ev => SwitchSwatch(true));
-            controlPanel.PreviousSwatch.RegisterCallback<ClickEvent>(ev => SwitchSwatch(false));
-            controlPanel.SimilarTones.RegisterValueChangedCallback(x => UpdateParametersPanel());
+            mainPanel.ModelSize.RegisterValueChangedCallback(x => UpdateModelSize(x.newValue));
+            mainPanel.ExplodeAmount.RegisterValueChangedCallback(x => UpdateExplodeLevel(x.newValue));
 
-            controlPanel.PageWidth.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            controlPanel.PageHeight.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            controlPanel.WidthMargin.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            controlPanel.HeightMargin.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            controlPanel.TargetFaces.RegisterValueChangedCallback(x => UpdateParametersPanel());
-            controlPanel.SortColors.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            controlPanel.Create2D.RegisterValueChangedCallback(x => UpdateParametersPanel());
-            controlPanel.Create25D.RegisterValueChangedCallback(x => UpdateParametersPanel());
+            mainPanel.NextSwatch.RegisterCallback<ClickEvent>(ev => { palette.NextSwatch(); ApplySwatch(); });
+            mainPanel.PreviousSwatch.RegisterCallback<ClickEvent>(ev => { palette.PreviousSwatch(); ApplySwatch(); });
+            mainPanel.ShuffleSwatch.RegisterCallback<ClickEvent>(ev => { palette.ShuffleSwatch(); ApplySwatch(); });
+            mainPanel.SimilarTones.RegisterValueChangedCallback(x => UpdateParametersPanel());
+
+            mainPanel.PageWidth.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
+            mainPanel.PageHeight.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
+            mainPanel.WidthMargin.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
+            mainPanel.HeightMargin.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
+            mainPanel.TargetFaces.RegisterValueChangedCallback(x => UpdateParametersPanel());
+            mainPanel.SortColors.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
+            mainPanel.Create2D.RegisterValueChangedCallback(x => UpdateParametersPanel());
+            mainPanel.Create25D.RegisterValueChangedCallback(x => UpdateParametersPanel());
 
             taskProgress = new TaskProgress();
-            taskProgress.progressMessage = "Ready";
-
-            InitSwatches();
+            taskProgress.Ok("Ready", 0);
 
             UpdateParametersPanel();
         }
 
-        private void InitSwatches()
+        private void ApplySwatch()
         {
-            var cf = new ColorFactory();
-            swatches = new List<UnityEngine.Color[]>();
-            for (int i = 0; i < swatchCount; i++)
-            {
-                var swatch = new UnityEngine.Color[ControlPanel.colorCount];
-                for (int j = 0; j < ControlPanel.colorCount; j++)
-                {
-                    BeautifulColors.Color c = cf.RandomBeautiful().First();
-                    swatch[j] = new UnityEngine.Color(c.R/255f, c.G/255f, c.B/255f, c.A/255f);
-                }
-                swatches.Add(swatch);
-            }
-            currentSwatchId = 0;
-        }
-
-        private void SetSwatch(int swatchId)
-        {
-            currentSwatchId = swatchId;
-            for (int i = 0; i < ControlPanel.colorCount; i++) {
-                controlPanel.colorButtons[i].style.backgroundColor = swatches[currentSwatchId][i];
-                Debug.Log("Color id = "+currentSwatchId);
-            }
+            UpdateParametersPanel();
             if (currentModel != null)
-                UnityUtil.ApplySwatch(currentModel, swatches[currentSwatchId]);
-        }
-
-        private void SwitchSwatch(bool isNext)
-        {
-            int nextSwatchId = currentSwatchId + (isNext ? 1 : -1);
-            if (nextSwatchId < 0) nextSwatchId = swatchCount - 1;
-            if (nextSwatchId == swatchCount) nextSwatchId = 0;
-            SetSwatch(nextSwatchId);
+                UnityUtil.ApplySwatch(currentModel, palette.GetSwatch());
         }
 
         private void Start()
@@ -180,37 +157,37 @@ namespace Unfolder {
             UpdateExplodeLevel(explodeAmount);
         }
 
-        private void SetComputing(bool computing)
-        {
-            isComputing = computing;
-            if (isComputing) taskProgress.requestInterruption = false;
-            UpdateParametersPanel();
-        }
-
         private void UpdateProgressBar()
         {
-            VisualElement progressAmount = rootPanel.Q<VisualElement>("ProgressAmount");
-            rootPanel.Q<Label>("ProgressMessage").text = taskProgress.GetProgressMessage();
-            //progressAmount.layout.width = taskProgress.progressAmount;
+            mainPanel.Cancel.SetEnabled(taskProgress.IsComputing());
+            mainPanel.ProgressMessage.text = taskProgress.GetProgressMessage();
+            if (taskProgress.taskStatus == TaskProgress.Status.Error) mainPanel.ProgressAmount.style.backgroundColor = errorColor;
+            if (taskProgress.taskStatus == TaskProgress.Status.Warning) mainPanel.ProgressAmount.style.backgroundColor = warningColor;
+            if (taskProgress.taskStatus == TaskProgress.Status.Ok) mainPanel.ProgressAmount.style.backgroundColor = okColor;
+            mainPanel.ProgressAmount.style.width = new StyleLength(new Length(taskProgress.progressAmount * 100, LengthUnit.Percent));
         }
 
         private void UpdateParametersPanel()
         {
             if (rootPanel.enabledSelf) {
-                explodeAmount = controlPanel.ExplodeAmount.value;
-                modelSize = controlPanel.ModelSize.value;
-                acceptMixedMaterials = !controlPanel.SortColors.value;
-                create2D = controlPanel.Create2D.value;
-                create25D = controlPanel.Create25D.value;
-                controlPanel.TargetFaces.highValue = originalFaces;
-                targetFaces = (int)controlPanel.TargetFaces.value;
-                sheetSize = new Vector2(controlPanel.PageWidth.value / 10f, controlPanel.PageHeight.value / 10f);
-                sheetMargin = new Vector2(controlPanel.WidthMargin.value / 10f, controlPanel.HeightMargin.value / 10f);
-                controlPanel.FaceCount.value = currentModel == null ? "" : "" + currentFaces;
-                controlPanel.SaveArtcraft.SetEnabled(currentPattern != null);
-                controlPanel.Cancel.SetEnabled(isComputing);
+                explodeAmount = mainPanel.ExplodeAmount.value;
+                modelSize = mainPanel.ModelSize.value;
+                acceptMixedMaterials = !mainPanel.SortColors.value;
+                create2D = mainPanel.Create2D.value;
+                create25D = mainPanel.Create25D.value;
+                mainPanel.TargetFaces.highValue = Math.Min(originalFaces, maxReduceFaces);
+                targetFaces = (int)mainPanel.TargetFaces.value;
+                sheetSize = new Vector2(mainPanel.PageWidth.value / 10f, mainPanel.PageHeight.value / 10f);
+                sheetMargin = new Vector2(mainPanel.WidthMargin.value / 10f, mainPanel.HeightMargin.value / 10f);
+                mainPanel.FaceCount.value = currentModel == null ? "" : "" + currentFaces;
+                mainPanel.SaveArtcraft.SetEnabled((current2DModel != null || !create2D) && (current25DModel != null || !create25D));
             }
-            rootPanel.Q<VisualElement>("ControlPanel").SetEnabled(!isComputing);
+            mainPanel.UpdateSwatch();
+            mainPanel.ControlPanel.SetEnabled(!taskProgress.IsComputing());
+            mainPanel.RotateModel.visible = mode == ViewMode.Model;
+            mainPanel.ExplodeAmount.visible = mode == ViewMode.Model3D;
+            mainPanel.SwitchFrontBack.visible = mode == ViewMode.Model2D;
+            UpdateProgressBar();
         }
 
         private void ImportModelFromFile(bool loadDefault)
@@ -219,11 +196,11 @@ namespace Unfolder {
             if (loadDefault) {
                 newModel = ModelLoader.LoadModel(Path.Combine(Application.dataPath, "Resources/DefaultModel.dae"));
             } else {
-                taskProgress.progressMessage = "Picking a model file";
+                taskProgress.Ok("Picking a model file", 0);
                 String filePath = UnityUtil.ChooseFile(loadPath);
                 if (filePath == null)
                 {
-                    taskProgress.progressMessage = "No model file selected";
+                    taskProgress.Warning("No model file selected", 1);
                     return;
                 }
                 loadPath = Path.GetDirectoryName(filePath);
@@ -231,7 +208,7 @@ namespace Unfolder {
                 newModel = ModelLoader.LoadModel(filePath);
                 if (newModel == null)
                 {
-                    taskProgress.progressMessage = "Model loading failed : "+ filePath;
+                    taskProgress.Error("Model loading failed : "+ filePath, 1);
                     return;
                 }
             }
@@ -248,7 +225,9 @@ namespace Unfolder {
             UnityUtil.SplitTriangles(currentModel);
             //UnityUtil.ApplyOutline(currentModel);
             originalFaces = UnityUtil.CountFaces(currentModel);
+            palette.AddSwatch(UnityUtil.GetSwatch(currentModel), true);
             UpdateCurrentModel();
+            taskProgress.Ok("Model "+ modelName+ " loaded", 1);
         }
 
         private void PickInLibrary()
@@ -275,48 +254,47 @@ namespace Unfolder {
             UnityUtil.ReducePoly(currentModel, reduceFactor, angleNoFold);
             UnityUtil.SplitTriangles(currentModel);
             //UnityUtil.ApplyOutline(currentModel);
-            taskProgress.progressMessage = "Model face count reduced from "+ faceBefore+" to "+ UnityUtil.CountFaces(currentModel);
-            taskProgress.progressAmount = 1f;
+            taskProgress.Ok("Model face count reduced from "+ faceBefore+" to "+ UnityUtil.CountFaces(currentModel), 1);
             UpdateCurrentModel();
         }
 
         private void RotateModel()
         {
             if (originalModel == null) return;
-            taskProgress.progressMessage = "Model rotated of 90°";
             originalModel.transform.Rotate(Vector3.right, 90);
             currentModel.transform.Rotate(Vector3.right, 90);
-            taskProgress.progressAmount = 1f;
-            //UpdateCurrentModel();
+            taskProgress.Ok("Model rotated of 90°");
         }
 
         private void GeneratePreview()
         {
-            if (isComputing) return;
+            if (taskProgress.IsComputing()) return;
             SetViewMode(ViewMode.Model);
             if (currentModel == null) return;
             currentPattern = Paperman.GetPattern(this, taskProgress);
             var t = new Task(() => {
-                SetComputing(true);
+                taskProgress.NotifyStart();
                 try {
                     currentPattern.Compute();
                     parameterChanged = false;
                     requestBuild3D = true;
-                    taskProgress.progressAmount = 1;
-                    taskProgress.progressMessage = "Artcraft preview generated";
+                    taskProgress.Ok("Artcraft preview generated", 1);
                 } catch (Exception ex) {
                     currentPattern = null;
-                    taskProgress.progressMessage = "Error while generating artcraft preview : " + ex.Message;
+                    taskProgress.Error("Artcraft preview not generated : " + ex.Message);
                 }
-                SetComputing(false);
+                taskProgress.NotifyStop();
             });
             t.Start();
         }
 
         private void GenerateArtcraft()
         {
-            if (isComputing) return;
-            if (currentModel == null) return;
+            if (taskProgress.IsComputing()) return;
+            if (currentModel == null) {
+                taskProgress.Warning("Please load a model before computing", 1);
+                return;
+            }
             bool patternNotBuild = false;
             if (currentPattern == null || parameterChanged) {
                 SetViewMode(ViewMode.Model);
@@ -327,23 +305,22 @@ namespace Unfolder {
                 SetViewMode(ViewMode.Model3D);
             }
             var t = new Task(() => {
-                SetComputing(true);
+                taskProgress.NotifyStart();
                 try {
                     if (patternNotBuild) {
                         currentPattern.Compute();
                         parameterChanged = false;
                         requestBuild3D = true;
                     }
-                    taskProgress.progressAmount = 0;
-                    taskProgress.progressMessage = "Optimizing artcraft shapes position";
+                    taskProgress.Ok("Optimizing artcraft shapes position", 0);
                     currentPattern.NestShapes(taskProgress);
-                    taskProgress.progressAmount = 1;
-                    taskProgress.progressMessage = "Artcraft generated";
+                    taskProgress.Ok("Artcraft generated", 1);
                     requestUnfold = true;
                 } catch (Exception ex) {
-                    taskProgress.progressMessage = "Error while generating artcraft : "+ex.Message;
+                    if (!requestBuild3D) currentPattern = null;
+                    taskProgress.Error("Artcraft not generated : "+ex.Message);
                 }
-                SetComputing(false);
+                taskProgress.NotifyStop();
             });
             t.Start();
         }
@@ -352,21 +329,18 @@ namespace Unfolder {
         {
             if (currentPattern == null || (current2DModel == null && create2D) || (current25DModel == null && create25D))
             {
-                taskProgress.progressMessage = "Please generate an artcraft before saving";
-                taskProgress.taskStatus = TaskProgress.Status.Error;
+                taskProgress.Warning("Please generate an artcraft before saving", 1);
                 return;
             }
             if (!create2D && !create25D)
             {
-                taskProgress.progressMessage = "Please generate at least one artcraft style (paper or 3D printing) before exporting";
-                taskProgress.taskStatus = TaskProgress.Status.Error;
+                taskProgress.Warning("Please generate at least one artcraft style (paper or 3D printing) before exporting", 1);
                 return;
             }
             String filePath = UnityUtil.ChooseExportPath(savePath, modelName);
             if (filePath == null)
             {
-                taskProgress.progressMessage = "No export file chosen. Export cancelled";
-                taskProgress.taskStatus = TaskProgress.Status.Error;
+                taskProgress.Warning("No export file chosen. Export cancelled", 1);
                 return;
             }
             savePath = Path.GetDirectoryName(filePath);
@@ -377,27 +351,22 @@ namespace Unfolder {
             if (create2D)
             {
                 SetViewMode(ViewMode.Model2D);
-                Paperman.Capture2DImage(currentPattern, resolutionDPI, currentModel.name, tempPath);
+                List<String> pngFilesPath = currentPattern.Capture2DImages(tempPath);
+                //Paperman.BuildPdf(pngFilesPath, currentModel.name, tempPath);
             }
             if (create25D)
             {
                 SetViewMode(ViewMode.Model25D);
                 Paperman.ExportChildrenInSTL(current25DModel, tempPath);
             }
-            UnityUtil.ExportFiles(tempPath, filePath);
-            taskProgress.progressAmount = 1;
-            taskProgress.progressMessage = "Artcraft zip file generated here : "+ filePath;
+            UnityUtil.ZipFiles(tempPath, filePath);
+            taskProgress.Ok("Artcraft zip file generated here : "+ filePath, 1);
             SetViewMode(ViewMode.Model);
         }
 
         private void Cancel()
         {
-            if (currentPattern == null) return;
-            currentPattern.RequestInterruption();
-            SetComputing(false);
-            SetViewMode(ViewMode.Model);
-            taskProgress.progressAmount = 1;
-            taskProgress.progressMessage = "Generation cancelled";
+            taskProgress.RequestInterruption();
         }
 
         private void SwitchView()
@@ -408,25 +377,24 @@ namespace Unfolder {
             else if (mode == ViewMode.Model2D) SetViewMode(ViewMode.Model25D);
         }
 
+        private void SwitchFrontBack()
+        {
+            backCamera.enabled = !backCamera.enabled;
+        }
+
         void Update()
         {
-            if (!isComputing) {
+            if (!taskProgress.IsComputing()) {
                 if (Input.GetKeyDown("l")) ImportModelFromFile(false);
                 if (Input.GetKeyDown("r")) ReduceMesh();
                 if (Input.GetKeyDown("p")) GeneratePreview();
                 if (Input.GetKeyDown("g")) GenerateArtcraft();
-                if (Input.GetKeyDown("s")) SaveArtcraft();
+                if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl) || Input.GetKeyDown(KeyCode.LeftApple) || Input.GetKeyDown(KeyCode.RightApple)
+                    && Input.GetKeyDown("s")) SaveArtcraft();
             }
             if (Input.GetKeyDown(KeyCode.Escape)) Cancel();
             if (Input.GetKeyDown(KeyCode.Space)) SwitchView();
-            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
-            {
-                backCamera.enabled = false;
-            }
-            if (Input.GetKeyUp(KeyCode.LeftShift) || Input.GetKeyUp(KeyCode.RightShift))
-            {
-                backCamera.enabled = true;
-            }
+            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift)) SwitchFrontBack();
 
             if (requestBuild3D)
             {
@@ -438,8 +406,7 @@ namespace Unfolder {
                     SetViewMode(ViewMode.Model3D);
                 } catch (Exception ex)
                 {
-                    taskProgress.progressMessage = "Error while creating artcraft preview - "+ex.Message;
-                    taskProgress.taskStatus = TaskProgress.Status.Error;
+                    taskProgress.Error("Error while creating artcraft preview - "+ex.Message, 1);
                 }
             }
 
@@ -457,12 +424,11 @@ namespace Unfolder {
                     SetViewMode(ViewMode.Model2D);
                 } catch (Exception ex)
                 {
-                    taskProgress.progressMessage = "Error while creating artcraft preview - " + ex.Message;
-                    taskProgress.taskStatus = TaskProgress.Status.Error;
+                    taskProgress.Error("Error while creating artcraft preview - " + ex.Message, 1);
                 }
         }
 
-            UpdateProgressBar();
+            UpdateParametersPanel();
             UpdateModelSize(modelSize);
             UpdateExplodeLevel(explodeAmount);
         }
@@ -531,6 +497,8 @@ namespace Unfolder {
             if (current2DModel != null) current2DModel.SetActive(mode == ViewMode.Model2D);
             if (current3DModel != null) current3DModel.SetActive(mode == ViewMode.Model3D);
             if (current25DModel != null) current25DModel.SetActive(mode == ViewMode.Model25D);
+
+            UpdateParametersPanel();
         }
     }
 }

@@ -1,0 +1,4 @@
+<configuration>
+    <dllmap dll="gdiplus" target="/Library/Frameworks/Mono.framework/Versions/6.12.0/lib/libgdiplus.dylib" />
+    <dllmap dll="gdiplus.dll" target="/Library/Frameworks/Mono.framework/Versions/6.12.0/lib/libgdiplus.dylib" />
+</configuration>

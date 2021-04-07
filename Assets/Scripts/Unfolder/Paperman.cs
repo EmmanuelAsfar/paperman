@@ -4,6 +4,8 @@ using Unfolder;
 using UnityEngine;
 using Parabox.Stl;
 using System.IO;
+using PdfSharp.Pdf;
+using PdfSharp.Drawing;
 
 public class Paperman
 {
@@ -30,6 +32,7 @@ public class Paperman
             sheetMargin = player.sheetMargin,
             shapeMaxSizeRatio = player.shapeMaxSizeRatio,
             sheetSize = player.sheetSize,
+            resolutionDPI = player.resolutionDPI,
             acceptMixedMaterials = player.acceptMixedMaterials,
             pieceThickness = player.pieceThickness,
             foldThickness = player.foldThickness,
@@ -38,41 +41,20 @@ public class Paperman
         return p;
     }
 
-    public static void Place2DCameras(Pattern p)
+    public static void BuildPdf(List<String> filePaths, String name, String path)
     {
-        Camera camera2DFront = GameObject.Find("Render2DFront").GetComponent<Camera>();
-        Camera camera2DBack = GameObject.Find("Render2DBack").GetComponent<Camera>();
-        camera2DFront.orthographicSize = p.sheetSize.y / 2;
-        camera2DBack.orthographicSize = p.sheetSize.y / 2;
-        camera2DFront.transform.position = Vector3.forward * 10;
-        camera2DBack.transform.position = -Vector3.forward * 10;
-    }
-
-    public static List<String> Capture2DImage(Pattern p, float resolutionDPI, String name, String path)
-    {
-        Camera camera2DFront = GameObject.Find("Render2DFront").GetComponent<Camera>();
-        Camera camera2DBack = GameObject.Find("Render2DBack").GetComponent<Camera>();
-        Place2DCameras(p);
-        String extension = ".png";
-        float pixelPerCm = resolutionDPI / 2.54f;
-        int width = (int)(p.sheetSize.x * pixelPerCm);
-        int height = (int)(p.sheetSize.y * pixelPerCm);
-        
-        var paths = new List<String>();
-        for (int sheet = 0; sheet < p.sheetCount; sheet++)
+        PdfDocument doc = new PdfDocument();
+        int page = 0;
+        foreach (var filePath in filePaths)
         {
-            camera2DFront.transform.position = (Vector3)p.sheetSize / 2 + Vector3.right * sheet * p.sheetMarginFactor * p.sheetSize.x + Vector3.forward * 10;
-            camera2DBack.transform.position = (Vector3)p.sheetSize / 2 + Vector3.right * sheet * p.sheetMarginFactor * p.sheetSize.x - Vector3.forward * 10;
-            String rectoPath = Path.Combine(path, name + "_recto_" + (sheet + 1) + extension);
-            String versoPath = Path.Combine(path, name + "_verso_" + (sheet + 1) + extension);
-            CameraCapture.Capture(camera2DFront, rectoPath, width, height);
-            CameraCapture.Capture(camera2DBack, versoPath, width, height);
-            paths.Add(rectoPath);
-            paths.Add(versoPath);
+            doc.Pages.Add(new PdfPage());
+            XGraphics xgr = XGraphics.FromPdfPage(doc.Pages[page]);
+            XImage img = XImage.FromFile(filePath);
+            xgr.DrawImage(img, 0, 0);
+            page++;
         }
-        camera2DFront.transform.position = (Vector3)p.sheetSize / 2 + Vector3.forward * 10;
-        camera2DBack.transform.position = (Vector3)p.sheetSize / 2 - Vector3.forward * 10;
-        return paths;
+        doc.Save(Path.Combine(path, name+".pdf"));
+        doc.Close();
     }
 
     public static String Capture3DImage(Pattern p, Camera camera, float resolutionDPI, String name, String path)
@@ -82,7 +64,7 @@ public class Paperman
         int width = (int)(p.sheetSize.x * pixelPerCm);
         int height = (int)(p.sheetSize.y * pixelPerCm);
         String filePath = Path.Combine(path, name + extension);
-        CameraCapture.Capture(camera, filePath, width, height);
+        SheetCapture.Capture(camera, filePath, width, height);
         return filePath;
     }
 

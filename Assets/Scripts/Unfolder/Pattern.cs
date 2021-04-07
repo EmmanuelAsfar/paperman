@@ -38,6 +38,7 @@ namespace Unfolder
         public float stripMinHeight = 0.5f;
         public float stripMinAngle = 15f;
         public float lineThickness = 0.01f;
+        public float resolutionDPI = 300f;
 
         // Pour impression3D
         public float foldLimitAngle = 5f;
@@ -67,6 +68,8 @@ namespace Unfolder
         public readonly List<List<Shape>> sheets;
 
         private Dictionary<int, GameObject> shape3DById;
+        private List<GameObject> sheets2D;
+
         public int sheetCount;
         private Nest nest;
         private TaskProgress taskProgress;
@@ -104,7 +107,7 @@ namespace Unfolder
 
         public void Compute()
         {
-            taskProgress.progressMessage = "Computing artcraft preview";
+            taskProgress.Ok("Computing artcraft preview", 0);
             CreateShapes();
             ExpandShapes();
             BuildStrips();
@@ -133,7 +136,7 @@ namespace Unfolder
                     added = false;
                     foreach (var border in shape.GetBorders().ToList())
                     {
-                        if (taskProgress.requestInterruption) throw new ThreadInterruptedException("Operation create shapes cancelled by user");
+                        if (taskProgress.ShouldInterrupt()) throw new ThreadInterruptedException("Operation create shapes cancelled by user");
                         foreach (var opposite in border.GetConnectedSides())
                         {
                             if (Math.Abs(border.GetAngle(opposite)) > 1E-2) continue; // TODO Sortir constante
@@ -171,7 +174,7 @@ namespace Unfolder
                 {
                     Shape shape1 = border.triangle.shape;
                     if (!shapes.ContainsKey(shape1.shapeId)) continue;
-                    if (taskProgress.requestInterruption) throw new ThreadInterruptedException("Operation expand shapes cancelled by user");
+                    if (taskProgress.ShouldInterrupt()) throw new ThreadInterruptedException("Operation expand shapes cancelled by user");
                     foreach (var opposite in border.GetConnectedSides())
                     {
                         Shape addedShape = shape1.AddShapeToBorder(border, opposite, false);
@@ -190,11 +193,6 @@ namespace Unfolder
             }
         }
 
-        public void RequestInterruption()
-        {
-            taskProgress.requestInterruption = true;
-        }
-
         public void BuildStripsIds()
         {
             int stripId = 1;
@@ -208,7 +206,7 @@ namespace Unfolder
             borders.Sort(new Side.ByLength());
             foreach (var side in borders)
             {
-                if (taskProgress.requestInterruption) throw new ThreadInterruptedException("Operation build strips IDs cancelled by user");
+                if (taskProgress.ShouldInterrupt()) throw new ThreadInterruptedException("Operation build strips IDs cancelled by user");
                 if (usedSide.Contains(side)) continue;
                 bool oppositeExist = false;
                 foreach (var opposite in side.GetConnectedSides())
@@ -236,7 +234,7 @@ namespace Unfolder
                     if (usedSide.Contains(side)) continue;
                     foreach (var opposite in side.GetConnectedSides())
                     {
-                        if (taskProgress.requestInterruption) throw new ThreadInterruptedException("Operation create strips cancelled by user");
+                        if (taskProgress.ShouldInterrupt()) throw new ThreadInterruptedException("Operation create strips cancelled by user");
                         if (usedSide.Contains(opposite)) continue;
                         side.stripType = lastMale ? StripType.Female : StripType.Male;
                         opposite.stripType = lastMale ? StripType.Male : StripType.Female;
@@ -412,9 +410,10 @@ namespace Unfolder
             GameObject object3DCopy = GameObject.Instantiate(object3D);
             GameObject allSheets = new GameObject(object3D.name + "2D");
             int sheetId = 0;
+            sheets2D = new List<GameObject>();
             foreach (var shapeSheet in sheets)
             {
-                GameObject sheet = new GameObject("Sheet_"+(sheetId+1));
+                GameObject sheet = new GameObject(object3D.name + "page_" + (sheetId+1));
                 GameObject sheetBack = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 sheetBack.GetComponent<MeshRenderer>().sharedMaterial = backMaterial;
                 sheetBack.name = "sheetBg";
@@ -433,8 +432,13 @@ namespace Unfolder
                     GameObject shape2D = shape.BuildShape2D(object3DCopy);
                     shape2D.transform.parent = sheet.transform;
                 }
-                sheet.transform.parent = allSheets.transform;
-                sheet.transform.position = sheetId * sheetMarginFactor * sheetSize.x * Vector3.right;
+                int columns = (int)Math.Sqrt(sheets.Count * sheetSize.y / sheetSize.x * 2);
+                int col = sheetId % columns;
+                int row = sheetId / columns;
+                sheet.transform.parent = allSheets.transform; // TODO faire en dessous column / 2 et regler plutôt la taille du viewport
+                sheet.transform.position = (col - columns / 3f) * sheetMarginFactor * sheetSize.x * Vector3.right
+                                         + row * sheetMarginFactor * sheetSize.y * Vector3.down;
+                sheets2D.Add(sheet);
                 sheetId++;
             }
             GameObject.Destroy(object3DCopy);
@@ -449,7 +453,7 @@ namespace Unfolder
             int sheetId = 0;
             foreach (var shapeSheet in sheets)
             {
-                GameObject sheet = new GameObject("Sheet_" + (sheetId + 1));
+                GameObject sheet = new GameObject(object3D.name+"batch_" + (sheetId + 1));
                 foreach (var shape in shapeSheet)
                 {
                     GameObject shape2D = shape.BuildShape25D(object3DCopy, alphabet);
@@ -482,6 +486,14 @@ namespace Unfolder
             // allSheets.transform.position = new Vector2(-b.max.x - 5, b.max.y);
             allShapes.AddComponent<ObjectExploder>();
             return allShapes;
+        }
+
+        public List<String> Capture2DImages(String path)
+        {
+            var filePaths = new List<String>();
+            foreach (var sheet in sheets2D)
+                filePaths.AddRange(SheetCapture.CaptureSheet(path, resolutionDPI, sheet, sheetSize));
+            return filePaths;
         }
     }
 }
