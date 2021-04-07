@@ -1,0 +1,6 @@
+.swatch-color {
+    background-color: rgb(156, 46, 46);
+    width: 40px;
+    height: 40px;
+    position: relative;
+}

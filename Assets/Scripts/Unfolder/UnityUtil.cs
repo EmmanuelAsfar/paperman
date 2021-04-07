@@ -30,6 +30,19 @@ namespace Unfolder
             return b;
         }
 
+        public static void ApplySwatch(GameObject go, Color[] swatchColors)
+        {
+            foreach (var renderer in go.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                int i = 0;
+                foreach (var material in renderer.materials)
+                {
+                    material.color = swatchColors[i % swatchColors.Length];
+                    i++;
+                }
+            }
+        }
+
         public static void ApplyOutline(GameObject object3D)
         {
             var outlineShader = Resources.Load("Shader/StandardSurfaceOutlined", typeof(Shader)) as Shader;

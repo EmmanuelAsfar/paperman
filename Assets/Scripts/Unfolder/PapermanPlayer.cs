@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BeautifulColors;
 using Parabox.Stl;
 using Unfolder;
 using UnityEngine;
@@ -24,6 +26,8 @@ namespace Unfolder {
         public float modelSize = 40f; // Size of the target model (diagonal)
         [Range(0, 5)]
         public float explodeAmount = 1f; // Size of the target model (diagonal)
+        [Range(0, 50)]
+        public int swatchCount = 100;
 
         // Pour nesting and layout
         [Range(0.1f, 1)]
@@ -75,14 +79,17 @@ namespace Unfolder {
         private int targetFaces;
         private int currentFaces;
         private int originalFaces;
+        private int currentSwatchId;
 
         private string modelName;
         private string savePath;
         private string loadPath = ".";
         private static int tempId;
+        
 
         private TaskProgress taskProgress;
         private bool parameterChanged;
+        private List<UnityEngine.Color[]> swatches;
 
         private ControlPanel controlPanel;
 
@@ -101,9 +108,17 @@ namespace Unfolder {
             controlPanel.GenerateArtcraft.RegisterCallback<ClickEvent>(ev => GenerateArtcraft());
             controlPanel.SaveArtcraft.RegisterCallback<ClickEvent>(ev => SaveArtcraft());
             controlPanel.Cancel.RegisterCallback<ClickEvent>(ev => Cancel());
+            controlPanel.ViewModel.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model));
+            controlPanel.ViewPreview.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model3D));
+            controlPanel.View2D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model2D));
+            controlPanel.View25D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model25D));
 
             controlPanel.ModelSize.RegisterValueChangedCallback(x => UpdateModelSize(x.newValue));
             controlPanel.ExplodeAmount.RegisterValueChangedCallback(x => UpdateExplodeLevel(x.newValue));
+
+            controlPanel.NextSwatch.RegisterCallback<ClickEvent>(ev => SwitchSwatch(true));
+            controlPanel.PreviousSwatch.RegisterCallback<ClickEvent>(ev => SwitchSwatch(false));
+            controlPanel.SimilarTones.RegisterValueChangedCallback(x => UpdateParametersPanel());
 
             controlPanel.PageWidth.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
             controlPanel.PageHeight.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
@@ -116,7 +131,46 @@ namespace Unfolder {
 
             taskProgress = new TaskProgress();
             taskProgress.progressMessage = "Ready";
+
+            InitSwatches();
+
             UpdateParametersPanel();
+        }
+
+        private void InitSwatches()
+        {
+            var cf = new ColorFactory();
+            swatches = new List<UnityEngine.Color[]>();
+            for (int i = 0; i < swatchCount; i++)
+            {
+                var swatch = new UnityEngine.Color[ControlPanel.colorCount];
+                for (int j = 0; j < ControlPanel.colorCount; j++)
+                {
+                    BeautifulColors.Color c = cf.RandomBeautiful().First();
+                    swatch[j] = new UnityEngine.Color(c.R/255f, c.G/255f, c.B/255f, c.A/255f);
+                }
+                swatches.Add(swatch);
+            }
+            currentSwatchId = 0;
+        }
+
+        private void SetSwatch(int swatchId)
+        {
+            currentSwatchId = swatchId;
+            for (int i = 0; i < ControlPanel.colorCount; i++) {
+                controlPanel.colorButtons[i].style.backgroundColor = swatches[currentSwatchId][i];
+                Debug.Log("Color id = "+currentSwatchId);
+            }
+            if (currentModel != null)
+                UnityUtil.ApplySwatch(currentModel, swatches[currentSwatchId]);
+        }
+
+        private void SwitchSwatch(bool isNext)
+        {
+            int nextSwatchId = currentSwatchId + (isNext ? 1 : -1);
+            if (nextSwatchId < 0) nextSwatchId = swatchCount - 1;
+            if (nextSwatchId == swatchCount) nextSwatchId = 0;
+            SetSwatch(nextSwatchId);
         }
 
         private void Start()
