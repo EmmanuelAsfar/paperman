@@ -6,6 +6,7 @@ using Parabox.Stl;
 using System.IO;
 using PdfSharp.Pdf;
 using PdfSharp.Drawing;
+using PdfSharp;
 
 public class Paperman
 {
@@ -41,16 +42,20 @@ public class Paperman
         return p;
     }
 
-    public static void BuildPdf(List<String> filePaths, String name, String path)
+    public static void BuildPdf(List<String> filePaths, String name, String path, Vector2 sheetSize)
     {
         PdfDocument doc = new PdfDocument();
         int page = 0;
         foreach (var filePath in filePaths)
         {
-            doc.Pages.Add(new PdfPage());
+            PdfPage pdfPage = new PdfPage(); // TODO Pb A4 inexact
+            pdfPage.Width = new XUnit(Math.Round(sheetSize.x * 72f / 2.54f), XGraphicsUnit.Point);
+            pdfPage.Height = new XUnit(Math.Round(sheetSize.y * 72f / 2.54f), XGraphicsUnit.Point);
+            doc.Pages.Add(pdfPage);
             XGraphics xgr = XGraphics.FromPdfPage(doc.Pages[page]);
+            // TODO Not working on Mac due to GDIPlus not found...
             XImage img = XImage.FromFile(filePath);
-            xgr.DrawImage(img, 0, 0);
+            xgr.DrawImage(img, 0, 0, doc.Pages[page].Width, doc.Pages[page].Height);
             page++;
         }
         doc.Save(Path.Combine(path, name+".pdf"));

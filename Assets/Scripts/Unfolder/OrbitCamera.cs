@@ -1,15 +1,19 @@
 using UnityEngine;
 using System.Collections;
+using Unfolder;
 
 public class OrbitCamera : MonoBehaviour
 {
+    public PapermanPlayer papermanPlayer;
+
     protected Camera myCamera;
 
     protected Vector3 _LocalRotation;
     protected Vector2 _LocalPan;
 
     public float OrbitSensitivity = 120f;
-    public float ScrollSensitvity = 2f;
+    public float ZoomSensitvity = 2f;
+    public float ExplodeSensitvity = 10f;
     public float PanSensitvity = 25f;
     public float OrbitDampening = 10f;
     public float ScrollDampening = 6f;
@@ -26,28 +30,50 @@ public class OrbitCamera : MonoBehaviour
         _LocalRotation = transform.parent.localRotation.eulerAngles;
     }
 
+    private bool ModifierPressed()
+    {
+        return Input.GetKey(KeyCode.RightAlt)
+            || Input.GetKey(KeyCode.LeftAlt)
+            || Input.GetKey(KeyCode.RightControl)
+            || Input.GetKey(KeyCode.LeftControl)
+            || Input.GetKey(KeyCode.AltGr)
+            || Input.GetKey(KeyCode.Space)
+            || Input.GetKey(KeyCode.LeftShift)
+            || Input.GetKey(KeyCode.RightShift);
+    }
 
     void LateUpdate()
     {
         if (!myCamera.enabled) return;
+        bool modifier = ModifierPressed();
+        bool button = Input.GetMouseButton(0);
+        bool otherButton = Input.GetMouseButton(1) || Input.GetMouseButton(2);
+        float mouseX = Input.GetAxis("Mouse X");
+        float mouseY = Input.GetAxis("Mouse Y");
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+
         //Rotation of the Camera based on Mouse Coordinates
-        if (Input.GetMouseButton(0) && (Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0))
+        if (button && (mouseX != 0 || mouseY != 0))
         {
-            _LocalRotation.x += Input.GetAxis("Mouse X") * OrbitSensitivity * CameraDistance / myCamera.pixelWidth;
-            _LocalRotation.y -= Input.GetAxis("Mouse Y") * OrbitSensitivity * CameraDistance / myCamera.pixelHeight;
+            _LocalRotation.x += mouseX * OrbitSensitivity * CameraDistance / myCamera.pixelWidth;
+            _LocalRotation.y -= mouseY * OrbitSensitivity * CameraDistance / myCamera.pixelHeight;
         }
-        if ((Input.GetMouseButton(1) || Input.GetMouseButton(2)) && (Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0))
+        if ((modifier || otherButton) && (mouseX != 0 || mouseY != 0))
         {
-            _LocalPan.x -= Input.GetAxis("Mouse X") * PanSensitvity * CameraDistance / myCamera.pixelWidth;
-            _LocalPan.y -= Input.GetAxis("Mouse Y") * PanSensitvity * CameraDistance / myCamera.pixelHeight;
+            _LocalPan.x -= mouseX * PanSensitvity * CameraDistance / myCamera.pixelWidth;
+            _LocalPan.y -= mouseY * PanSensitvity * CameraDistance / myCamera.pixelHeight;
         }
         //Zooming Input from our Mouse Scroll Wheel
-        if (Input.GetAxis("Mouse ScrollWheel") != 0f)
-        {
-            float ScrollAmount = Input.GetAxis("Mouse ScrollWheel") * ScrollSensitvity;
-            ScrollAmount *= (this.CameraDistance * 0.3f);
-            this.CameraDistance += ScrollAmount * -1f;
-            this.CameraDistance = Mathf.Clamp(this.CameraDistance, MinDistance, MaxDistance);
+        if (scroll != 0f) {
+            if (modifier && papermanPlayer.mode == ViewMode.Model3D) {
+                papermanPlayer.mainPanel.ExplodeAmount.value += scroll * ExplodeSensitvity;
+            }
+            else {
+                float ScrollAmount = scroll * ZoomSensitvity;
+                ScrollAmount *= (this.CameraDistance * 0.3f);
+                this.CameraDistance += ScrollAmount * -1f;
+                this.CameraDistance = Mathf.Clamp(this.CameraDistance, MinDistance, MaxDistance);
+            }
         }
 
         //Actual Camera Rig Transformations

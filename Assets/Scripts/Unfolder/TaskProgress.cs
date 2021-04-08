@@ -20,6 +20,7 @@ namespace Unfolder
         {
             this.progressMessage = message;
             this.taskStatus = Status.Error;
+            if (progressAmount == 0) progressAmount = 1;
         }
 
         public void Error(String message, float progressAmount)
@@ -38,6 +39,7 @@ namespace Unfolder
         {
             Warning(message);
             this.progressAmount = progressAmount;
+            if (progressAmount == 0) progressAmount = 1;
         }
 
         public void Ok(String message)

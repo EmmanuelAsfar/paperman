@@ -425,7 +425,7 @@ namespace NestingLibPort
                 }
                 // Shape i cannot be placed : throw an Error
                 if (!placed)
-                    throw new Exception("A shape is too big for the sheet. Sheet = " + binBound + " and shape ID = " + tree[i].bid);
+                    throw new Exception("A shape is too big for the sheet. Please reduce your model size or increase sheet size");
             }
             return CanBePlacdPolygonIndex;
         }

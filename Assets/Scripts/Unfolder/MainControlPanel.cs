@@ -11,6 +11,12 @@ namespace Unfolder
         public VisualElement NavigationPanel;
         public VisualElement ControlPanel;
 
+        public VisualElement ChooseModel;
+        public VisualElement SimplifyModel;
+        public VisualElement ChooseColors;
+        public VisualElement BuildArtcraft;
+        public VisualElement ExportArtcraft;
+
         public Label ProgressMessage;
         public VisualElement ProgressAmount;
 
@@ -42,13 +48,14 @@ namespace Unfolder
         public Slider HeightMargin;
         public Slider TargetFaces;
         public Toggle SortColors;
-        public Toggle Create2D;
+        public Toggle CreatePNG;
+        public Toggle CreatePDF;
         public Toggle Create25D;
 
         public Toggle SimilarTones;
 
 
-        public TextField FaceCount;
+        public Label FaceCount;
 
         private readonly ColorPalette palette;
 
@@ -58,6 +65,11 @@ namespace Unfolder
 
             NavigationPanel = root.Q<VisualElement>("NavigationPanel");
             ControlPanel = root.Q<VisualElement>("ControlPanel");
+            ChooseModel = root.Q<VisualElement>("ChooseModel");
+            SimplifyModel = root.Q<VisualElement>("SimplifyModel");
+            ChooseColors = root.Q<VisualElement>("ChooseColors");
+            BuildArtcraft = root.Q<VisualElement>("BuildArtcraft");
+            ExportArtcraft = root.Q<VisualElement>("ExportArtcraft");
 
             ProgressMessage = root.Q<Label>("ProgressMessage");
             ProgressAmount = root.Q<VisualElement>("ProgressAmount");
@@ -88,12 +100,13 @@ namespace Unfolder
             HeightMargin = root.Q<Slider>("HeightMargin");
             TargetFaces = root.Q<Slider>("TargetFaces");
             SortColors = root.Q<Toggle>("SortColors");
-            Create2D = root.Q<Toggle>("Create2D");
+            CreatePNG = root.Q<Toggle>("CreatePNG");
+            CreatePDF = root.Q<Toggle>("CreatePDF");
             Create25D = root.Q<Toggle>("Create25D");
 
             SimilarTones = root.Q<Toggle>("SimilarTones");
 
-            FaceCount = root.Q<TextField>("FaceCount");
+            FaceCount = root.Q<Label>("FaceCount");
 
             colorButtons = new Button[colorCount];
             for (int i = 0; i < colorCount; i++)

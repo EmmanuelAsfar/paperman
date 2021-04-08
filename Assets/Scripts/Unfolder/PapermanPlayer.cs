@@ -77,7 +77,8 @@ namespace Unfolder {
         public ViewMode mode;
 
         private bool requestBuild3D, requestUnfold;
-        private bool create2D;
+        private bool createPNG;
+        private bool createPDF;
         private bool create25D;
         private int targetFaces;
         private int currentFaces;
@@ -91,8 +92,9 @@ namespace Unfolder {
 
         private TaskProgress taskProgress;
         private bool parameterChanged;
+        private bool backView = true;
 
-        private MainControlPanel mainPanel;
+        public MainControlPanel mainPanel;
         private ColorPalette palette;
 
         private VisualElement rootPanel;
@@ -134,7 +136,8 @@ namespace Unfolder {
             mainPanel.HeightMargin.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
             mainPanel.TargetFaces.RegisterValueChangedCallback(x => UpdateParametersPanel());
             mainPanel.SortColors.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            mainPanel.Create2D.RegisterValueChangedCallback(x => UpdateParametersPanel());
+            mainPanel.CreatePNG.RegisterValueChangedCallback(x => UpdateParametersPanel());
+            mainPanel.CreatePDF.RegisterValueChangedCallback(x => UpdateParametersPanel());
             mainPanel.Create25D.RegisterValueChangedCallback(x => UpdateParametersPanel());
 
             taskProgress = new TaskProgress();
@@ -146,8 +149,12 @@ namespace Unfolder {
         private void ApplySwatch()
         {
             UpdateParametersPanel();
-            if (currentModel != null)
-                UnityUtil.ApplySwatch(currentModel, palette.GetSwatch());
+            UnityUtil.ApplySwatch(currentModel, -1, palette.GetSwatch());
+            if (currentPattern == null) return;
+            int subMeshCount = currentPattern.meshStructure.subMeshCount;
+            UnityUtil.ApplySwatch(current3DModel, subMeshCount, palette.GetSwatch());
+            UnityUtil.ApplySwatch(current2DModel, subMeshCount, palette.GetSwatch());
+            UnityUtil.ApplySwatch(current25DModel, subMeshCount, palette.GetSwatch());
         }
 
         private void Start()
@@ -169,24 +176,36 @@ namespace Unfolder {
 
         private void UpdateParametersPanel()
         {
-            if (rootPanel.enabledSelf) {
-                explodeAmount = mainPanel.ExplodeAmount.value;
-                modelSize = mainPanel.ModelSize.value;
-                acceptMixedMaterials = !mainPanel.SortColors.value;
-                create2D = mainPanel.Create2D.value;
-                create25D = mainPanel.Create25D.value;
-                mainPanel.TargetFaces.highValue = Math.Min(originalFaces, maxReduceFaces);
-                targetFaces = (int)mainPanel.TargetFaces.value;
-                sheetSize = new Vector2(mainPanel.PageWidth.value / 10f, mainPanel.PageHeight.value / 10f);
-                sheetMargin = new Vector2(mainPanel.WidthMargin.value / 10f, mainPanel.HeightMargin.value / 10f);
-                mainPanel.FaceCount.value = currentModel == null ? "" : "" + currentFaces;
-                mainPanel.SaveArtcraft.SetEnabled((current2DModel != null || !create2D) && (current25DModel != null || !create25D));
-            }
-            mainPanel.UpdateSwatch();
-            mainPanel.ControlPanel.SetEnabled(!taskProgress.IsComputing());
-            mainPanel.RotateModel.visible = mode == ViewMode.Model;
+            explodeAmount = mainPanel.ExplodeAmount.value;
+            modelSize = mainPanel.ModelSize.value;
+            acceptMixedMaterials = !mainPanel.SortColors.value;
+            createPNG = mainPanel.CreatePNG.value;
+            createPDF = mainPanel.CreatePDF.value;
+            create25D = mainPanel.Create25D.value;
+            mainPanel.TargetFaces.highValue = Math.Min(originalFaces, maxReduceFaces);
+            targetFaces = (int)mainPanel.TargetFaces.value;
+            sheetSize = new Vector2(mainPanel.PageWidth.value / 10f, mainPanel.PageHeight.value / 10f);
+            sheetMargin = new Vector2(mainPanel.WidthMargin.value / 10f, mainPanel.HeightMargin.value / 10f);
+            mainPanel.FaceCount.text = currentModel == null ? "" : "(currently " + currentFaces+" faces)";;
+            
+            
+            mainPanel.RotateModel.visible = mode == ViewMode.Model && currentModel != null;
             mainPanel.ExplodeAmount.visible = mode == ViewMode.Model3D;
             mainPanel.SwitchFrontBack.visible = mode == ViewMode.Model2D;
+
+            mainPanel.ViewModel.visible = currentModel != null;
+            mainPanel.ViewPreview.visible = current3DModel != null;
+            mainPanel.View2D.visible = current2DModel != null;
+            mainPanel.View25D.visible = current25DModel != null;
+
+            mainPanel.SimplifyModel.visible = currentModel != null;
+            mainPanel.ChooseColors.visible = currentModel != null;
+            mainPanel.BuildArtcraft.visible = currentModel != null;
+            mainPanel.ExportArtcraft.visible = current2DModel != null || current25DModel != null;
+
+            mainPanel.ControlPanel.SetEnabled(!taskProgress.IsComputing());
+
+            mainPanel.UpdateSwatch();
             UpdateProgressBar();
         }
 
@@ -194,7 +213,8 @@ namespace Unfolder {
         {
             GameObject newModel;
             if (loadDefault) {
-                newModel = ModelLoader.LoadModel(Path.Combine(Application.dataPath, "Resources/DefaultModel.dae"));
+                return;
+                //newModel = ModelLoader.LoadModel(Path.Combine(Application.dataPath, "Resources/DefaultModel.dae"));
             } else {
                 taskProgress.Ok("Picking a model file", 0);
                 String filePath = UnityUtil.ChooseFile(loadPath);
@@ -256,6 +276,7 @@ namespace Unfolder {
             //UnityUtil.ApplyOutline(currentModel);
             taskProgress.Ok("Model face count reduced from "+ faceBefore+" to "+ UnityUtil.CountFaces(currentModel), 1);
             UpdateCurrentModel();
+            ApplySwatch();
         }
 
         private void RotateModel()
@@ -327,12 +348,12 @@ namespace Unfolder {
 
         private void SaveArtcraft()
         {
-            if (currentPattern == null || (current2DModel == null && create2D) || (current25DModel == null && create25D))
+            if (currentPattern == null || (current2DModel == null && createPNG) || (current25DModel == null && create25D))
             {
                 taskProgress.Warning("Please generate an artcraft before saving", 1);
                 return;
             }
-            if (!create2D && !create25D)
+            if (!createPNG && !createPDF && !create25D)
             {
                 taskProgress.Warning("Please generate at least one artcraft style (paper or 3D printing) before exporting", 1);
                 return;
@@ -344,15 +365,22 @@ namespace Unfolder {
                 return;
             }
             savePath = Path.GetDirectoryName(filePath);
-            tempId++;
-            String tempPath = Path.Combine(Application.temporaryCachePath, modelName+"_" + tempId);
+            bool dirExist = true;
+            String tempPath = null;
+            while (dirExist)
+            {
+                tempId++;
+                tempPath = Path.Combine(Application.temporaryCachePath, modelName + "_" + tempId);
+                dirExist = Directory.Exists(tempPath);
+            }
             Directory.CreateDirectory(tempPath);
             Debug.Log("Export temps files at : " + tempPath);
-            if (create2D)
+            if (createPNG || createPDF)
             {
                 SetViewMode(ViewMode.Model2D);
                 List<String> pngFilesPath = currentPattern.Capture2DImages(tempPath);
-                //Paperman.BuildPdf(pngFilesPath, currentModel.name, tempPath);
+                if (createPDF) Paperman.BuildPdf(pngFilesPath, modelName, tempPath, sheetSize);
+                if (!createPNG) foreach (var pngFile in pngFilesPath) File.Delete(pngFile);
             }
             if (create25D)
             {
@@ -379,22 +407,22 @@ namespace Unfolder {
 
         private void SwitchFrontBack()
         {
-            backCamera.enabled = !backCamera.enabled;
+            backView = !backView;
+            backCamera.enabled = backView;
         }
 
         void Update()
         {
             if (!taskProgress.IsComputing()) {
-                if (Input.GetKeyDown("l")) ImportModelFromFile(false);
-                if (Input.GetKeyDown("r")) ReduceMesh();
-                if (Input.GetKeyDown("p")) GeneratePreview();
-                if (Input.GetKeyDown("g")) GenerateArtcraft();
-                if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl) || Input.GetKeyDown(KeyCode.LeftApple) || Input.GetKeyDown(KeyCode.RightApple)
-                    && Input.GetKeyDown("s")) SaveArtcraft();
+                //if (Input.GetKeyDown("l")) ImportModelFromFile(false);
+                //if (Input.GetKeyDown("r")) ReduceMesh();
+                //if (Input.GetKeyDown("p")) GeneratePreview();
+                //if (Input.GetKeyDown("g")) GenerateArtcraft();
+                //if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl) || Input.GetKeyDown(KeyCode.LeftApple) || Input.GetKeyDown(KeyCode.RightApple)
+                //    && Input.GetKeyDown("s")) SaveArtcraft();
             }
             if (Input.GetKeyDown(KeyCode.Escape)) Cancel();
-            if (Input.GetKeyDown(KeyCode.Space)) SwitchView();
-            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift)) SwitchFrontBack();
+            //if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift)) SwitchFrontBack();
 
             if (requestBuild3D)
             {
@@ -458,7 +486,7 @@ namespace Unfolder {
             PlaceIn3DViewer(currentModel);
         }
 
-        private void UpdateExplodeLevel(float newExplodeAmount)
+        public void UpdateExplodeLevel(float newExplodeAmount)
         {
             this.explodeAmount = newExplodeAmount;
             if (current3DModel == null) return;
@@ -485,7 +513,7 @@ namespace Unfolder {
         {
             mode = viewMode;
 
-            backCamera.enabled = mode == ViewMode.Model2D;
+            backCamera.enabled = mode == ViewMode.Model2D && backView;
             frontCamera.enabled = mode == ViewMode.Model2D;
             orbitCamera.enabled = mode != ViewMode.Model2D;
 

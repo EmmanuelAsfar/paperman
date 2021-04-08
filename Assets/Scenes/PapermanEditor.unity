@@ -1889,8 +1889,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5724da81b5d54769b5bd2b19f081cb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  papermanPlayer: {fileID: 1230555395}
   OrbitSensitivity: 170
-  ScrollSensitvity: 2
+  ZoomSensitvity: 2
+  ExplodeSensitvity: 10
   PanSensitvity: 30
   OrbitDampening: 20
   ScrollDampening: 6
@@ -1943,8 +1945,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5724da81b5d54769b5bd2b19f081cb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  papermanPlayer: {fileID: 0}
   OrbitSensitivity: 170
-  ScrollSensitvity: 2
+  ZoomSensitvity: 2
+  ExplodeSensitvity: 0.5
   PanSensitvity: 30
   OrbitDampening: 20
   ScrollDampening: 6

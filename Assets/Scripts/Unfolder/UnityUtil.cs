@@ -30,16 +30,16 @@ namespace Unfolder
             return b;
         }
 
-        public static void ApplySwatch(GameObject go, Color[] swatchColors)
+        public static void ApplySwatch(GameObject go, int subMeshCount, Color[] swatchColors)
         {
+            // TODO Remplacer par un script Swatch / Gizmo etc... à attacher aux objets 2D / 3D
+            if (go == null) return;
             foreach (var renderer in go.GetComponentsInChildren<MeshRenderer>(true))
             {
-                int i = 0;
-                foreach (var material in renderer.materials)
-                {
-                    material.color = swatchColors[i % swatchColors.Length];
-                    i++;
-                }
+                if (renderer.name.Equals("sheetBg") || renderer.name.Equals("sheetFg")) continue; // TODO Enlever au profildu script evoqué ci-dessus
+                int matCount = subMeshCount > 0 ? Math.Min(renderer.materials.Length, subMeshCount) : renderer.materials.Length;
+                for (int i = 0; i < matCount; i++)
+                    renderer.materials[i].color = swatchColors[i % swatchColors.Length];
             }
         }
 
