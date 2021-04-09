@@ -20,7 +20,7 @@ public class PanCamera : MonoBehaviour
 
     void LateUpdate()
     {
-        if ((Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
+        if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.Space) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
             && (Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0))
         {
             localPan.x -= Input.GetAxis("Mouse X") * PanSensitvity * Zoom / cameraBack.pixelWidth;

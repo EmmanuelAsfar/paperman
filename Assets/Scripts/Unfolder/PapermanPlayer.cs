@@ -301,6 +301,7 @@ namespace Unfolder {
                     requestBuild3D = true;
                     taskProgress.Ok("Artcraft preview generated", 1);
                 } catch (Exception ex) {
+                    Debug.Log(ex);
                     currentPattern = null;
                     taskProgress.Error("Artcraft preview not generated : " + ex.Message);
                 }
@@ -338,6 +339,7 @@ namespace Unfolder {
                     taskProgress.Ok("Artcraft generated", 1);
                     requestUnfold = true;
                 } catch (Exception ex) {
+                    Debug.Log(ex);
                     if (!requestBuild3D) currentPattern = null;
                     taskProgress.Error("Artcraft not generated : "+ex.Message);
                 }
@@ -397,14 +399,6 @@ namespace Unfolder {
             taskProgress.RequestInterruption();
         }
 
-        private void SwitchView()
-        {
-            if (mode == ViewMode.Model25D) SetViewMode(ViewMode.Model);
-            else if (mode == ViewMode.Model) SetViewMode(ViewMode.Model3D);
-            else if (mode == ViewMode.Model3D) SetViewMode(ViewMode.Model2D);
-            else if (mode == ViewMode.Model2D) SetViewMode(ViewMode.Model25D);
-        }
-
         private void SwitchFrontBack()
         {
             backView = !backView;
@@ -413,16 +407,7 @@ namespace Unfolder {
 
         void Update()
         {
-            if (!taskProgress.IsComputing()) {
-                //if (Input.GetKeyDown("l")) ImportModelFromFile(false);
-                //if (Input.GetKeyDown("r")) ReduceMesh();
-                //if (Input.GetKeyDown("p")) GeneratePreview();
-                //if (Input.GetKeyDown("g")) GenerateArtcraft();
-                //if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl) || Input.GetKeyDown(KeyCode.LeftApple) || Input.GetKeyDown(KeyCode.RightApple)
-                //    && Input.GetKeyDown("s")) SaveArtcraft();
-            }
             if (Input.GetKeyDown(KeyCode.Escape)) Cancel();
-            //if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift)) SwitchFrontBack();
 
             if (requestBuild3D)
             {
@@ -434,6 +419,7 @@ namespace Unfolder {
                     SetViewMode(ViewMode.Model3D);
                 } catch (Exception ex)
                 {
+                    Debug.Log(ex);
                     taskProgress.Error("Error while creating artcraft preview - "+ex.Message, 1);
                 }
             }
@@ -452,6 +438,7 @@ namespace Unfolder {
                     SetViewMode(ViewMode.Model2D);
                 } catch (Exception ex)
                 {
+                    Debug.Log(ex);
                     taskProgress.Error("Error while creating artcraft preview - " + ex.Message, 1);
                 }
         }

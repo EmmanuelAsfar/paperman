@@ -470,8 +470,8 @@ namespace Unfolder
         public GameObject BuildShape2D(GameObject object3D)
         {
             Vector2[] initialUVs = pattern.object3D.GetComponent<MeshFilter>().mesh.uv;
-            GameObject currentSheet = new GameObject(pattern.object3D.name+"_"+shapeId);
-            MeshRenderer renderer2D = currentSheet.AddComponent<MeshRenderer>();
+            GameObject currentShape = new GameObject(pattern.object3D.name+"_"+shapeId);
+            MeshRenderer renderer2D = currentShape.AddComponent<MeshRenderer>();
             Mesh sheetMesh = new Mesh();
             int subMeshCount = pattern.meshStructure.subMeshCount;
 
@@ -526,19 +526,19 @@ namespace Unfolder
             }
 
             // On ajoute les languettes et numéros
-            foreach (var side in GetBordersInOrder())
+            foreach (var border in GetBordersInOrder())
             {
-                Side opposite = side.GetFirstOppositeSide();
+                Side opposite = border.GetFirstOppositeSide();
                 if (opposite == null) continue;
-                Vector2 x = side.X2D;
-                Vector2 y = side.Y2D;
-                Vector2[] stripPoints = side.GetStripPoints(pattern.stripHeight, pattern.stripAngle);
+                Vector2 x = border.X2D;
+                Vector2 y = border.Y2D;
+                Vector2[] stripPoints = border.GetStripPoints(pattern.stripHeight, pattern.stripAngle);
                 Vector2 x2 = stripPoints[0];
                 Vector2 y2 = stripPoints[1];
                 Vector2 xAxis = (x - y).normalized;
                 Vector2 yAxis = Vector3.Cross(Vector3.forward, y - x).normalized;
 
-                if (side.IsMale())
+                if (border.IsMale())
                 {
                     // Contour des languettes
                     AddLine(x, x2, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, -1, false);
@@ -551,7 +551,7 @@ namespace Unfolder
                 }
 
                 Vector3 zLayer = (float)(-4 * 1E-2) * Vector3.forward; // TODO Sortir la constante
-                Add2DText(side, zLayer, currentSheet);
+                Add2DText(border, zLayer, currentShape);
             }
 
             sheetMesh.SetVertices(vertices);
@@ -564,7 +564,7 @@ namespace Unfolder
             sheetMesh.RecalculateTangents();
             sheetMesh.Optimize();
 
-            currentSheet.AddComponent<MeshFilter>().mesh = sheetMesh;
+            currentShape.AddComponent<MeshFilter>().mesh = sheetMesh;
 
             // Add materials to the result
             MeshRenderer renderer = object3D.GetComponent<MeshRenderer>();
@@ -588,7 +588,17 @@ namespace Unfolder
             targetMaterials.Add(pattern.backMaterial); // Attention a l'ordre des materiaux
             renderer2D.materials = targetMaterials.ToArray();
 
-            return currentSheet;
+            // Ajout du collider
+            PolygonCollider2D collider = currentShape.AddComponent<PolygonCollider2D>();
+            var rb = currentShape.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            collider.isTrigger = true;
+            var colliderVertices = new List<Vector2>();
+            foreach (var border in GetBordersInOrder()) colliderVertices.Add(border.X2D);
+            colliderVertices.Add(colliderVertices.First());
+            collider.SetPath(0, colliderVertices);
+            currentShape.AddComponent<MoveRotate>();
+            return currentShape;
         }
 
         private GameObject Create3DText(String text, GameObject alphabet, Material material)

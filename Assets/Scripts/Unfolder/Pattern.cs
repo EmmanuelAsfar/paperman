@@ -414,16 +414,26 @@ namespace Unfolder
             foreach (var shapeSheet in sheets)
             {
                 GameObject sheet = new GameObject(object3D.name + "page_" + (sheetId+1));
-                GameObject sheetBack = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                sheetBack.GetComponent<MeshRenderer>().sharedMaterial = backMaterial;
-                sheetBack.name = "sheetBg";
-                sheetBack.transform.localScale = new Vector3(sheetSize.x, sheetSize.y, 1);
+                GameObject sheetBack = UnityUtil.CreateQuad("sheetBg", sheetSize, backMaterial);
                 sheetBack.transform.position = sheetSize / 2;
                 sheetBack.transform.parent = sheet.transform;
-                GameObject sheetFront = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                sheetFront.GetComponent<MeshRenderer>().sharedMaterial = backMaterial;
-                sheetFront.name = "sheetFg";
-                sheetFront.transform.localScale = new Vector3(sheetSize.x, sheetSize.y, 1);
+                var bound = sheetBack.GetComponent<MeshRenderer>().bounds;
+                var collider = sheetBack.AddComponent<PolygonCollider2D>();
+                collider.isTrigger = true;
+                Vector2 b1 = new Vector2(-sheetSize.x / 2, -sheetSize.y / 2);
+                Vector2 b2 = new Vector2(-sheetSize.x / 2, +sheetSize.y / 2);
+                Vector2 b3 = new Vector2(+sheetSize.x / 2, +sheetSize.y / 2);
+                Vector2 b4 = new Vector2(+sheetSize.x / 2, -sheetSize.y / 2);
+                Vector2 mx = Vector2.right * (sheetMargin.x + stripHeight - 2E-1f); // TODO Extraire constante (pour eviter un colide à 1 pixel)
+                Vector2 my = Vector2.up * (sheetMargin.y + stripHeight - 2E-1f); // TODO Extraire constante (pour eviter un colide à 1 pixel)
+                collider.pathCount = 4;
+                collider.SetPath(0, new Vector2[] { b1, b1 + mx, b2 + mx, b2 });
+                collider.SetPath(1, new Vector2[] { b2, b2 - my, b3 - my, b3 });
+                collider.SetPath(2, new Vector2[] { b3, b3 - mx, b4 - mx, b4 });
+                collider.SetPath(3, new Vector2[] { b4, b4 + my, b1 + my, b1 });
+                var rb = sheetBack.AddComponent<Rigidbody2D>();
+                rb.gravityScale = 0;
+                GameObject sheetFront = UnityUtil.CreateQuad("sheetFg", sheetSize, backMaterial);
                 sheetFront.transform.position = sheetSize / 2;
                 sheetFront.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
                 sheetFront.transform.parent = sheet.transform;
