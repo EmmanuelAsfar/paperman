@@ -402,7 +402,7 @@ namespace Unfolder {
         private void SwitchFrontBack()
         {
             backView = !backView;
-            backCamera.enabled = backView;
+            UpdateCameraView();
         }
 
         void Update()
@@ -496,13 +496,16 @@ namespace Unfolder {
             SetViewMode(ViewMode.Model);
         }
 
+        void UpdateCameraView()
+        {
+            backCamera.enabled = mode == ViewMode.Model2D && backView;
+            frontCamera.enabled = mode == ViewMode.Model2D && !backView;
+            orbitCamera.enabled = mode != ViewMode.Model2D;
+        }
+
         private void SetViewMode(ViewMode viewMode)
         {
             mode = viewMode;
-
-            backCamera.enabled = mode == ViewMode.Model2D && backView;
-            frontCamera.enabled = mode == ViewMode.Model2D;
-            orbitCamera.enabled = mode != ViewMode.Model2D;
 
             viewer3D.SetActive(mode == ViewMode.Model || mode == ViewMode.Model3D);
             viewer25D.SetActive(mode == ViewMode.Model25D);
@@ -514,6 +517,7 @@ namespace Unfolder {
             if (current25DModel != null) current25DModel.SetActive(mode == ViewMode.Model25D);
 
             UpdateParametersPanel();
+            UpdateCameraView();
         }
     }
 }

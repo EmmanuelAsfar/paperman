@@ -412,7 +412,7 @@ namespace Unfolder
             vertices.Add(c + zShift);
 
             // On applique la texture // TODO Crade, mettre les UV des lignes avec les lignes et triangles avec triangles
-            bool hasUv = initialUVs.Length > 0;
+            bool hasUv = initialUVs != null && initialUVs.Length > 0;
             uvs.Add(hasUv ? initialUVs[oa] : Vector2.zero);
             uvs.Add(hasUv ? initialUVs[ob] : Vector2.zero);
             uvs.Add(hasUv ? initialUVs[oc] : Vector2.zero);
@@ -467,6 +467,48 @@ namespace Unfolder
             triangles[subMeshId].Add(index + (reverse ? 1 : 2));
         }
 
+        public GameObject CreateGizmo(Material gizmoMaterial)
+        {
+            GameObject gizmo = new GameObject("Gizmo");
+            var mr = gizmo.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = gizmoMaterial;
+            Mesh mesh = new Mesh();
+            MeshFilter meshFilter = gizmo.AddComponent<MeshFilter>();
+
+            var vertices = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var trianglesId = new List<int>[1];
+            trianglesId[0] = new List<int>();
+
+            // On ajoute les surfaces
+            foreach (var triangle in triangles)
+            {
+                Vector3 a = triangle.A2D();
+                Vector3 b = triangle.B2D();
+                Vector3 c = triangle.C2D();
+                AddTriangle(a, b, c, 0, 0, 0, trianglesId, vertices, uvs, null, 0, +4, true);
+                AddTriangle(a, b, c, 0, 0, 0, trianglesId, vertices, uvs, null, 0, -4, false);
+            }
+
+            mesh.vertices = vertices.ToArray();
+            mesh.uv = uvs.ToArray();
+            mesh.SetTriangles(trianglesId[0], 0);
+            mesh.RecalculateNormals();
+            meshFilter.mesh = mesh;
+
+            // Ajout du collider
+            PolygonCollider2D collider = gizmo.AddComponent<PolygonCollider2D>();
+            var rb = gizmo.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            collider.isTrigger = true;
+            var colliderVertices = new List<Vector2>();
+            foreach (var border in GetBordersInOrder()) colliderVertices.Add(border.X2D);
+            colliderVertices.Add(colliderVertices.First());
+            collider.SetPath(0, colliderVertices);
+            gizmo.AddComponent<MoveRotate>();
+            return gizmo;
+        }
+
         public GameObject BuildShape2D(GameObject object3D)
         {
             Vector2[] initialUVs = pattern.object3D.GetComponent<MeshFilter>().mesh.uv;
@@ -498,7 +540,7 @@ namespace Unfolder
                 Vector3 a = triangle.A2D();
                 Vector3 b = triangle.B2D();
                 Vector3 c = triangle.C2D();
-                AddTriangle(a, b, c, triangle.OA, triangle.OB, triangle.OC, trianglesId, vertices, uvs, initialUVs, triangle.subMeshId, +1, true);
+                AddTriangle(a, b, c, triangle.OA, triangle.OB, triangle.OC, trianglesId, vertices, uvs, initialUVs, triangle.subMeshId, +3, true);
                 AddTriangle(a, b, c, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, backSubMeshId, -3, false);
             }
 
@@ -521,6 +563,7 @@ namespace Unfolder
                     else
                     {
                         AddLine(x, y, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, -5, false);
+                        AddLine(x, y, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, +5, true);
                     }
                 }
             }
@@ -540,6 +583,7 @@ namespace Unfolder
 
                 if (border.IsMale())
                 {
+                    // Côté back
                     // Contour des languettes
                     AddLine(x, x2, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, -1, false);
                     AddLine(x2, y2, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, -1, false);
@@ -548,6 +592,23 @@ namespace Unfolder
                     // Languettes
                     AddTriangle(x, x2, y, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, -2, false);
                     AddTriangle(y, x2, y2, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, -2, false);
+
+                    //Côté front
+                    // Contour des languettes
+                    AddLine(x, x2, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, +2, true);
+                    AddLine(x2, y2, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, +2, true);
+                    AddLine(y2, y, zAxis, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, +2, true);
+
+                    // Languettes
+                    Triangle triangle = pattern.acceptMixedMaterials ? opposite.triangle : border.triangle;
+                    AddTriangle(x, x2, y, triangle.OA, triangle.OB, triangle.OC, trianglesId, vertices, uvs, initialUVs, triangle.subMeshId, +2, true);
+                    AddTriangle(y, x2, y2, triangle.OA, triangle.OB, triangle.OC, trianglesId, vertices, uvs, initialUVs, triangle.subMeshId, +2, true);
+                } else
+                {
+                    // Languettes
+                    Triangle triangle = pattern.acceptMixedMaterials ? opposite.triangle : border.triangle;
+                    AddTriangle(x, x2, y, triangle.OA, triangle.OB, triangle.OC, trianglesId, vertices, uvs, initialUVs, triangle.subMeshId, +1, true);
+                    AddTriangle(y, x2, y2, triangle.OA, triangle.OB, triangle.OC, trianglesId, vertices, uvs, initialUVs, triangle.subMeshId, +1, true);
                 }
 
                 Vector3 zLayer = (float)(-4 * 1E-2) * Vector3.forward; // TODO Sortir la constante
@@ -588,16 +649,9 @@ namespace Unfolder
             targetMaterials.Add(pattern.backMaterial); // Attention a l'ordre des materiaux
             renderer2D.materials = targetMaterials.ToArray();
 
-            // Ajout du collider
-            PolygonCollider2D collider = currentShape.AddComponent<PolygonCollider2D>();
-            var rb = currentShape.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 0;
-            collider.isTrigger = true;
-            var colliderVertices = new List<Vector2>();
-            foreach (var border in GetBordersInOrder()) colliderVertices.Add(border.X2D);
-            colliderVertices.Add(colliderVertices.First());
-            collider.SetPath(0, colliderVertices);
-            currentShape.AddComponent<MoveRotate>();
+            // Ajout du gizmo
+            var gizmo = CreateGizmo(pattern.gizmoMaterial);
+            gizmo.transform.parent = currentShape.transform;
             return currentShape;
         }
 
