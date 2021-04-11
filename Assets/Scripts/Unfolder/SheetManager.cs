@@ -13,7 +13,7 @@ public class SheetManager : MonoBehaviour
     public bool logoActive = true;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         var textShader = Resources.Load("Shader/OneSideTextShader", typeof(Shader)) as Shader;
 
@@ -29,7 +29,8 @@ public class SheetManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (scales == null) Start();
+        logo.gameObject.SetActive(logoActive);
+        if (scales == null) Awake();
         float ratio = transform.localScale.y * scale.x / (transform.localScale.x * scale.y);
         foreach (var textMesh in scales.Keys)
         {
@@ -38,7 +39,6 @@ public class SheetManager : MonoBehaviour
                 scales[textMesh].y * Math.Min(1, 1 / ratio),
                 1);
         }
-        logo.gameObject.SetActive(logoActive);
         activeZone.transform.localScale = new Vector3(1 - 2 * sheetMargin.x / transform.localScale.x, 1 - 2 * sheetMargin.y / transform.localScale.y, 1);
     }
 }

@@ -536,6 +536,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 268638148}
     m_Modifications:
+    - target: {fileID: 166031907772315553, guid: e82bcbffa63b348c0b4e7ebc4f7184bf, type: 3}
+      propertyPath: logoActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 166031907772315555, guid: e82bcbffa63b348c0b4e7ebc4f7184bf, type: 3}
       propertyPath: m_Name
       value: MainSheet
