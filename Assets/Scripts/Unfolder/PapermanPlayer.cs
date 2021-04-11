@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using BeautifulColors;
-using Parabox.Stl;
-using Unfolder;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -24,12 +19,12 @@ namespace Unfolder {
 
         [Range(500, 10000)]
         public int maxReduceFaces = 2000;
-
+        
         public bool acceptMixedMaterials = true;
         [Range(3, 100)]
         public float modelSize = 40f; // Size of the target model (diagonal)
         [Range(0, 5)]
-        public float explodeAmount = 1f; // Size of the target model (diagonal)
+        public float explodeAmount = 0.5f; // Size of the target model (diagonal)
 
         // Pour nesting and layout
         [Range(0.1f, 1)]
@@ -371,6 +366,18 @@ namespace Unfolder {
             t.Start();
         }
 
+        //IEnumerator ChangeColour(GameObject target)
+        //{
+        //    var material = target.GetComponent<Renderer>().material;
+        //    var elapsedTime = 0.0f;
+        //    while (elapsedTime < duration)
+        //    {
+        //        elapsedTime += Time.deltaTime;
+        //        material.color = Color.Lerp(material.color, targetColor, elapsedTime / duration);
+        //        yield return null; // Signale l'interruption, Unity peut reprendre la main pour ses tâches internes. La valeur null définit une interruption jusqu'à la prochaine frame.
+        //    }
+        //}
+
         private void SaveArtcraft()
         {
             if (currentPattern == null || (current2DModel == null && createPNG) || (current25DModel == null && create25D))
@@ -408,7 +415,7 @@ namespace Unfolder {
                 pngFilesPath.AddRange(currentPattern.CaptureMainPage(tempPath, saveName));
                 SetViewMode(ViewMode.Model2D);
                 pngFilesPath.AddRange(currentPattern.Capture2DImages(tempPath, saveName));
-                if (createPDF) Paperman.BuildPdf(pngFilesPath, saveName, tempPath, sheetSize);
+                if (createPDF) Paperman.BuildPdf(pngFilesPath, saveName, tempPath, sheetSize, sheetMargin);
                 if (!createPNG) foreach (var pngFile in pngFilesPath) File.Delete(pngFile);
             }
             if (create25D)

@@ -4,9 +4,8 @@ using Unfolder;
 using UnityEngine;
 using Parabox.Stl;
 using System.IO;
-using PdfSharp.Pdf;
-using PdfSharp.Drawing;
-using PdfSharp;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 
 public class Paperman
 {
@@ -42,24 +41,29 @@ public class Paperman
         return p;
     }
 
-    public static void BuildPdf(List<String> filePaths, String name, String path, Vector2 sheetSize)
+    public static void BuildPdf(List<String> filePaths, String name, String path, Vector2 sheetSize, Vector2 sheetMargin)
     {
-        PdfDocument doc = new PdfDocument();
-        int page = 0;
-        foreach (var filePath in filePaths)
+        var pageDimension = new Rectangle((int)Math.Round(sheetSize.x * 72f / 2.54f), (int)Math.Round(sheetSize.y * 72f / 2.54f));
+        int marginX = (int)Math.Round(sheetMargin.x * 72f / 2.54f);
+        int marginY = (int)Math.Round(sheetMargin.y * 72f / 2.54f);
+        Document document = new Document(pageDimension, marginX, marginX, marginY, marginY);
+        using (var stream = new FileStream(Path.Combine(path, name + ".pdf"), FileMode.Create, FileAccess.Write, FileShare.None))
         {
-            PdfPage pdfPage = new PdfPage(); // TODO Pb A4 inexact
-            pdfPage.Width = new XUnit(Math.Round(sheetSize.x * 72f / 2.54f), XGraphicsUnit.Point);
-            pdfPage.Height = new XUnit(Math.Round(sheetSize.y * 72f / 2.54f), XGraphicsUnit.Point);
-            doc.Pages.Add(pdfPage);
-            XGraphics xgr = XGraphics.FromPdfPage(doc.Pages[page]);
-            // TODO Not working on Mac due to GDIPlus not found...
-            XImage img = XImage.FromFile(filePath);
-            xgr.DrawImage(img, 0, 0, doc.Pages[page].Width, doc.Pages[page].Height);
-            page++;
+            PdfWriter.GetInstance(document, stream);
+            document.Open();
+            for (int i = 0; i < filePaths.Count; i++)
+            {
+                using (var imageStream = new FileStream(filePaths[i], FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    var image = Image.GetInstance(imageStream);
+                    image.ScaleAbsolute(pageDimension);
+                    image.SetAbsolutePosition(0, 0);
+                    document.Add(image);
+                }
+                if (i < filePaths.Count - 1) document.NewPage();
+            }
+            document.Close();
         }
-        doc.Save(Path.Combine(path, name+".pdf"));
-        doc.Close();
     }
 
     public static String Capture3DImage(Pattern p, Camera camera, float resolutionDPI, String name, String path)

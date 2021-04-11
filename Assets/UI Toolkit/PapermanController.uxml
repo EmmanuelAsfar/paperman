@@ -52,8 +52,8 @@
                 <ui:TextField picking-mode="Ignore" label="Artcraft name" value="filler text" text="Paperman" name="Title" />
                 <ui:TextField picking-mode="Ignore" label="Author / Credit" value="filler text" name="Author" />
                 <ui:VisualElement style="align-items: flex-start; flex-wrap: nowrap; flex-direction: column; white-space: normal;">
-                    <ui:Toggle label="Generate paper patterns (PNG files)" value="true" name="CreatePNG" style="flex-direction: row-reverse;" />
-                    <ui:Toggle label="Generate paper pattern (PDF file)" name="CreatePDF" value="false" style="flex-direction: row-reverse;" />
+                    <ui:Toggle label="Generate paper pattern (PDF file)" name="CreatePDF" value="true" style="flex-direction: row-reverse;" />
+                    <ui:Toggle label="Generate paper patterns (PNG files)" value="false" name="CreatePNG" style="flex-direction: row-reverse;" />
                     <ui:Toggle label="Generate 3D Printer pattern (STL files - beta)" value="false" name="Create25D" style="flex-direction: row-reverse; justify-content: space-around;" />
                 </ui:VisualElement>
                 <ui:Button text="Export files..." display-tooltip-when-elided="true" name="SaveArtcraft" />
@@ -74,7 +74,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement style="flex-grow: 1; align-items: flex-end; justify-content: space-between; flex-direction: column; padding-left: 8px; padding-right: 8px; padding-top: 8px; padding-bottom: 8px;">
-                <ui:Slider picking-mode="Ignore" label="Explode preview" value="8" high-value="50" name="ExplodeAmount" show-input-field="false" direction="Vertical" page-size="0.1" focusable="false" style="flex-direction: column; height: 50%; align-items: center;" />
+                <ui:Slider picking-mode="Ignore" label="Explode preview" value="5" high-value="50" name="ExplodeAmount" show-input-field="false" direction="Vertical" page-size="0.1" focusable="false" style="flex-direction: column; height: 50%; align-items: center;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
