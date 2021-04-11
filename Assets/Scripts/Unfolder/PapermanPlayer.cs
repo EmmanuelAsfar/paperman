@@ -314,6 +314,7 @@ namespace Unfolder {
             if (taskProgress.IsComputing()) return;
             SetViewMode(ViewMode.Model);
             if (currentModel == null) return;
+            DestroyArtcrafts();
             currentPattern = Paperman.GetPattern(this, taskProgress);
             var t = new Task(() => {
                 taskProgress.NotifyStart();

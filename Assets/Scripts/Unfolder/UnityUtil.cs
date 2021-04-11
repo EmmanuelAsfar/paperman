@@ -36,7 +36,7 @@ namespace Unfolder
             if (go == null) return;
             foreach (var renderer in go.GetComponentsInChildren<MeshRenderer>(true))
             {
-                if (renderer.name.Equals("sheetBg") || renderer.name.Equals("sheetFg")) continue; // TODO Enlever au profildu script evoqué ci-dessus
+                if (renderer.name.Equals("sheetBg") || renderer.name.Equals("sheetFg") || renderer.name.Equals("ActiveZone") || renderer.name.Equals("MadeWith")) continue; // TODO Enlever au profildu script evoqué ci-dessus
                 int matCount = subMeshCount > 0 ? Math.Min(renderer.materials.Length, subMeshCount) : renderer.materials.Length;
                 for (int i = 0; i < matCount; i++)
                     renderer.materials[i].color = swatchColors[i % swatchColors.Length];
