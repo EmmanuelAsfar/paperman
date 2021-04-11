@@ -32,6 +32,7 @@ namespace Unfolder
         public Button View25D;
         public Button ViewModel;
         public Button ViewPreview;
+        public Button ViewMainPage;
         public Button PreviousSwatch;
         public Button NextSwatch;
         public Button SwitchFrontBack;
@@ -56,6 +57,8 @@ namespace Unfolder
 
 
         public Label FaceCount;
+        public TextField Title;
+        public TextField Author;
 
         private readonly ColorPalette palette;
 
@@ -84,6 +87,7 @@ namespace Unfolder
             Cancel = root.Q<Button>("Cancel");
             ViewModel = root.Q<Button>("ViewModel");
             ViewPreview = root.Q<Button>("ViewPreview");
+            ViewMainPage = root.Q<Button>("ViewMainPage");
             View2D = root.Q<Button>("View2D");
             View25D = root.Q<Button>("View25D");
             PreviousSwatch = root.Q<Button>("PreviousSwatch");
@@ -107,6 +111,8 @@ namespace Unfolder
             SimilarTones = root.Q<Toggle>("SimilarTones");
 
             FaceCount = root.Q<Label>("FaceCount");
+            Title = root.Q<TextField>("Title");
+            Author = root.Q<TextField>("Author");
 
             colorButtons = new Button[colorCount];
             for (int i = 0; i < colorCount; i++)

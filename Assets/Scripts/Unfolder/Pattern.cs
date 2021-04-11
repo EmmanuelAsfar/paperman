@@ -552,11 +552,21 @@ namespace Unfolder
             return allShapes;
         }
 
-        public List<String> Capture2DImages(String path)
+        public List<String> Capture2DImages(String path, String name)
         {
             var filePaths = new List<String>();
-            foreach (var sheet in sheets2D)
-                filePaths.AddRange(SheetCapture.CaptureSheet(path, resolutionDPI, sheet, sheetSize));
+            int i = 1;
+            foreach (var sheet in sheets2D) {
+                filePaths.AddRange(SheetCapture.CaptureSheet(path, name+"_"+i,resolutionDPI, sheet, sheetSize));
+                i++;
+            }
+            return filePaths;
+        }
+
+        public List<String> CaptureMainPage(String path, String name)
+        {
+            var filePaths = new List<String>();
+            filePaths.Add(SheetCapture.CaptureMainPage(path, name + "_" + 0, resolutionDPI, sheetSize));
             return filePaths;
         }
     }

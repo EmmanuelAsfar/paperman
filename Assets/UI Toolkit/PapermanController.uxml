@@ -49,6 +49,8 @@
             </ui:VisualElement>
             <ui:VisualElement name="ExportArtcraft">
                 <ui:Label text="5. Export your artcraft patterns" display-tooltip-when-elided="true" style="-unity-font-style: bold; margin-top: 10px; padding-top: 5px; padding-left: 5px; padding-right: 5px; padding-bottom: 5px; background-color: rgb(154, 154, 154); margin-bottom: 5px;" />
+                <ui:TextField picking-mode="Ignore" label="Artcraft name" value="filler text" text="Paperman" name="Title" />
+                <ui:TextField picking-mode="Ignore" label="Author / Credit" value="filler text" name="Author" />
                 <ui:VisualElement style="align-items: flex-start; flex-wrap: nowrap; flex-direction: column; white-space: normal;">
                     <ui:Toggle label="Generate paper patterns (PNG files)" value="true" name="CreatePNG" style="flex-direction: row-reverse;" />
                     <ui:Toggle label="Generate paper pattern (PDF file)" name="CreatePDF" value="false" style="flex-direction: row-reverse;" />
@@ -60,17 +62,18 @@
         <ui:VisualElement name="NavigationPanel" style="align-items: stretch; flex-direction: column; justify-content: space-between; flex-grow: 1; flex-wrap: nowrap; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">
             <ui:VisualElement name="ActionPanel" style="flex-direction: row; justify-content: space-between;">
                 <ui:VisualElement name="SwitchPanel" style="flex-direction: row; height: 50px; flex-grow: 1; margin-right: 20px; max-height: 50px;">
-                    <ui:Button text="View Model" display-tooltip-when-elided="true" name="ViewModel" style="width: auto; position: relative; left: auto; opacity: 0.7; height: auto; flex-grow: 1; flex-wrap: wrap; white-space: normal; cursor: initial;" />
-                    <ui:Button text="Artcraft Preview" display-tooltip-when-elided="true" name="ViewPreview" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal;" />
-                    <ui:Button text="View Paper Artcraft" display-tooltip-when-elided="true" name="View2D" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal;" />
-                    <ui:Button text="View 3D Printer pattern (beta)" display-tooltip-when-elided="true" name="View25D" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal;" />
+                    <ui:Button text="View Model" display-tooltip-when-elided="true" name="ViewModel" style="width: auto; position: relative; left: auto; opacity: 0.7; height: auto; flex-grow: 1; flex-wrap: wrap; white-space: normal; cursor: initial; max-width: 130px;" />
+                    <ui:Button text="Artcraft Preview" display-tooltip-when-elided="true" name="ViewPreview" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
+                    <ui:Button text="View Paper Artcraft" display-tooltip-when-elided="true" name="View2D" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
+                    <ui:Button text="View 3D Printer pattern (beta)" display-tooltip-when-elided="true" name="View25D" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
+                    <ui:Button text="View Front page" display-tooltip-when-elided="true" name="ViewMainPage" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
                 </ui:VisualElement>
                 <ui:VisualElement style="align-items: stretch; width: 150px; justify-content: flex-start; flex-direction: row-reverse;">
                     <ui:Button text="Rotate model 90°" display-tooltip-when-elided="true" name="RotateModel" style="opacity: 0.7; flex-grow: 1; position: absolute; width: 150px; height: 50px;" />
                     <ui:Button text="Switch Font / Back page view" display-tooltip-when-elided="true" name="SwitchFrontBack" style="width: 150px; height: 50px; opacity: 0.7; flex-wrap: nowrap; white-space: normal; flex-grow: 1; position: absolute;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement style="flex-grow: 1; align-items: stretch; justify-content: flex-end; flex-direction: row; padding-left: 8px; padding-right: 8px; padding-top: 8px; padding-bottom: 8px;">
+            <ui:VisualElement style="flex-grow: 1; align-items: flex-end; justify-content: space-between; flex-direction: column; padding-left: 8px; padding-right: 8px; padding-top: 8px; padding-bottom: 8px;">
                 <ui:Slider picking-mode="Ignore" label="Explode preview" value="8" high-value="50" name="ExplodeAmount" show-input-field="false" direction="Vertical" page-size="0.1" focusable="false" style="flex-direction: column; height: 50%; align-items: center;" />
             </ui:VisualElement>
         </ui:VisualElement>

@@ -10,7 +10,7 @@ using Unfolder;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public enum ViewMode { Model, Model3D, Model2D, Model25D }
+public enum ViewMode { Model, ModelRender, Model3D, Model2D, Model25D }
 
 namespace Unfolder {
     public class PapermanPlayer : MonoBehaviour
@@ -74,6 +74,13 @@ namespace Unfolder {
         public Camera backCamera;
         public Camera frontCamera;
 
+        public GameObject scale;
+        public GameObject mainPage;
+        public GameObject mainSheet;
+
+        public TextMesh titleMesh;
+        public TextMesh authorMesh;
+
         public ViewMode mode;
 
         private bool requestBuild3D, requestUnfold;
@@ -91,7 +98,7 @@ namespace Unfolder {
         
 
         private TaskProgress taskProgress;
-        private bool parameterChanged;
+        private bool requireRecompute;
         private bool backView = true;
 
         public MainControlPanel mainPanel;
@@ -118,6 +125,7 @@ namespace Unfolder {
             mainPanel.Cancel.RegisterCallback<ClickEvent>(ev => Cancel());
             mainPanel.ViewModel.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model));
             mainPanel.ViewPreview.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model3D));
+            mainPanel.ViewMainPage.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.ModelRender));
             mainPanel.View2D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model2D));
             mainPanel.View25D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model25D));
             mainPanel.SwitchFrontBack.RegisterCallback<ClickEvent>(ev => SwitchFrontBack());
@@ -130,12 +138,14 @@ namespace Unfolder {
             mainPanel.ShuffleSwatch.RegisterCallback<ClickEvent>(ev => { palette.ShuffleSwatch(); ApplySwatch(); });
             mainPanel.SimilarTones.RegisterValueChangedCallback(x => UpdateParametersPanel());
 
-            mainPanel.PageWidth.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            mainPanel.PageHeight.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            mainPanel.WidthMargin.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
-            mainPanel.HeightMargin.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
+            mainPanel.PageWidth.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
+            mainPanel.PageHeight.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
+            mainPanel.WidthMargin.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
+            mainPanel.HeightMargin.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
+            mainPanel.SortColors.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
+            mainPanel.Title.RegisterValueChangedCallback(x => { UpdateMainPage(); });
+            mainPanel.Author.RegisterValueChangedCallback(x => { UpdateMainPage(); });
             mainPanel.TargetFaces.RegisterValueChangedCallback(x => UpdateParametersPanel());
-            mainPanel.SortColors.RegisterValueChangedCallback(x => { parameterChanged = true; UpdateParametersPanel(); });
             mainPanel.CreatePNG.RegisterValueChangedCallback(x => UpdateParametersPanel());
             mainPanel.CreatePDF.RegisterValueChangedCallback(x => UpdateParametersPanel());
             mainPanel.Create25D.RegisterValueChangedCallback(x => UpdateParametersPanel());
@@ -159,6 +169,7 @@ namespace Unfolder {
 
         private void Start()
         {
+            SetViewMode(ViewMode.Model);
             ImportModelFromFile(true);
             UpdateModelSize(modelSize);
             UpdateExplodeLevel(explodeAmount);
@@ -172,6 +183,18 @@ namespace Unfolder {
             if (taskProgress.taskStatus == TaskProgress.Status.Warning) mainPanel.ProgressAmount.style.backgroundColor = warningColor;
             if (taskProgress.taskStatus == TaskProgress.Status.Ok) mainPanel.ProgressAmount.style.backgroundColor = okColor;
             mainPanel.ProgressAmount.style.width = new StyleLength(new Length(taskProgress.progressAmount * 100, LengthUnit.Percent));
+        }
+
+        private void UpdateMainPage()
+        {
+            if (currentPattern == null || currentModel == null || mode != ViewMode.ModelRender) return;
+            float scale = orbitCamera.fieldOfView / currentPattern.sheetSize.y; // TODO Erroné ce n'est pas FOV. Revoir formule avec distance Page et FOV
+            mainSheet.transform.localScale = new Vector3(currentPattern.sheetSize.x, currentPattern.sheetSize.y, 1) * 10 * scale;
+            titleMesh.text = mainPanel.Title.text;
+            authorMesh.text = mainPanel.Author.text;
+            float ratio = currentPattern.sheetSize.x / currentPattern.sheetSize.y;
+            titleMesh.transform.localScale = new Vector3(Math.Min(1/ratio, ratio), Math.Min(1, ratio), 1)/100f;
+            authorMesh.transform.localScale = new Vector3(Math.Min(1/ratio, ratio), Math.Min(1, ratio), 1) / 80f;
         }
 
         private void UpdateParametersPanel()
@@ -189,7 +212,7 @@ namespace Unfolder {
             mainPanel.FaceCount.text = currentModel == null ? "" : "(currently " + currentFaces+" faces)";;
             
             
-            mainPanel.RotateModel.visible = mode == ViewMode.Model && currentModel != null;
+            mainPanel.RotateModel.visible = (mode == ViewMode.Model || mode == ViewMode.ModelRender) && currentModel != null;
             mainPanel.ExplodeAmount.visible = mode == ViewMode.Model3D;
             mainPanel.SwitchFrontBack.visible = mode == ViewMode.Model2D;
 
@@ -197,6 +220,7 @@ namespace Unfolder {
             mainPanel.ViewPreview.visible = current3DModel != null;
             mainPanel.View2D.visible = current2DModel != null;
             mainPanel.View25D.visible = current25DModel != null;
+            mainPanel.ViewMainPage.visible = current2DModel != null || current25DModel != null;
 
             mainPanel.SimplifyModel.visible = currentModel != null;
             mainPanel.ChooseColors.visible = currentModel != null;
@@ -232,8 +256,9 @@ namespace Unfolder {
                     return;
                 }
             }
-            Destroy(originalModel);
-            Destroy(currentModel);
+            mainPanel.Title.value = modelName;
+            DestroyImmediate(originalModel);
+            DestroyImmediate(currentModel);
             originalModel = newModel;
             //UnityUtil.Merge(originalModel);
             originalModel.SetActive(false);
@@ -258,7 +283,7 @@ namespace Unfolder {
         private void ReduceMesh()
         {
             if (originalModel == null) return;
-            Destroy(currentModel);
+            DestroyImmediate(currentModel);
             originalModel.SetActive(true);
             currentModel = Instantiate(originalModel);
             UnityUtil.Merge(currentModel);
@@ -297,15 +322,15 @@ namespace Unfolder {
                 taskProgress.NotifyStart();
                 try {
                     currentPattern.Compute();
-                    parameterChanged = false;
+                    requireRecompute = false;
                     requestBuild3D = true;
                     taskProgress.Ok("Artcraft preview generated", 1);
                 } catch (Exception ex) {
                     Debug.Log(ex);
-                    currentPattern = null;
                     taskProgress.Error("Artcraft preview not generated : " + ex.Message);
+                } finally {
+                    taskProgress.NotifyStop();
                 }
-                taskProgress.NotifyStop();
             });
             t.Start();
         }
@@ -318,7 +343,7 @@ namespace Unfolder {
                 return;
             }
             bool patternNotBuild = false;
-            if (currentPattern == null || parameterChanged) {
+            if (currentPattern == null || requireRecompute) {
                 SetViewMode(ViewMode.Model);
                 patternNotBuild = true;
                 currentPattern = Paperman.GetPattern(this, taskProgress);
@@ -331,7 +356,7 @@ namespace Unfolder {
                 try {
                     if (patternNotBuild) {
                         currentPattern.Compute();
-                        parameterChanged = false;
+                        requireRecompute = false;
                         requestBuild3D = true;
                     }
                     taskProgress.Ok("Optimizing artcraft shapes position", 0);
@@ -340,10 +365,10 @@ namespace Unfolder {
                     requestUnfold = true;
                 } catch (Exception ex) {
                     Debug.Log(ex);
-                    if (!requestBuild3D) currentPattern = null;
                     taskProgress.Error("Artcraft not generated : "+ex.Message);
+                } finally {
+                    taskProgress.NotifyStop();
                 }
-                taskProgress.NotifyStop();
             });
             t.Start();
         }
@@ -360,28 +385,32 @@ namespace Unfolder {
                 taskProgress.Warning("Please generate at least one artcraft style (paper or 3D printing) before exporting", 1);
                 return;
             }
-            String filePath = UnityUtil.ChooseExportPath(savePath, modelName);
+            String filePath = UnityUtil.ChooseExportPath(savePath, mainPanel.Title.value);
             if (filePath == null)
             {
                 taskProgress.Warning("No export file chosen. Export cancelled", 1);
                 return;
             }
             savePath = Path.GetDirectoryName(filePath);
+            String saveName = Path.GetFileNameWithoutExtension(filePath);
             bool dirExist = true;
             String tempPath = null;
             while (dirExist)
             {
                 tempId++;
-                tempPath = Path.Combine(Application.temporaryCachePath, modelName + "_" + tempId);
+                tempPath = Path.Combine(Application.temporaryCachePath, saveName + "_" + tempId);
                 dirExist = Directory.Exists(tempPath);
             }
             Directory.CreateDirectory(tempPath);
             Debug.Log("Export temps files at : " + tempPath);
             if (createPNG || createPDF)
             {
+                var pngFilesPath = new List<String>();
+                SetViewMode(ViewMode.ModelRender);
+                pngFilesPath.AddRange(currentPattern.CaptureMainPage(tempPath, saveName));
                 SetViewMode(ViewMode.Model2D);
-                List<String> pngFilesPath = currentPattern.Capture2DImages(tempPath);
-                if (createPDF) Paperman.BuildPdf(pngFilesPath, modelName, tempPath, sheetSize);
+                pngFilesPath.AddRange(currentPattern.Capture2DImages(tempPath, saveName));
+                if (createPDF) Paperman.BuildPdf(pngFilesPath, saveName, tempPath, sheetSize);
                 if (!createPNG) foreach (var pngFile in pngFilesPath) File.Delete(pngFile);
             }
             if (create25D)
@@ -391,7 +420,7 @@ namespace Unfolder {
             }
             UnityUtil.ZipFiles(tempPath, filePath);
             taskProgress.Ok("Artcraft zip file generated here : "+ filePath, 1);
-            SetViewMode(ViewMode.Model);
+            SetViewMode(ViewMode.ModelRender);
         }
 
         private void Cancel()
@@ -405,6 +434,18 @@ namespace Unfolder {
             UpdateCameraView();
         }
 
+        private void DestroyArtcrafts()
+        {
+            if (current2DModel != null) DestroyImmediate(current2DModel);
+            if (current3DModel != null) DestroyImmediate(current3DModel);
+            if (current25DModel != null) DestroyImmediate(current25DModel);
+            current2DModel = null;
+            current3DModel = null;
+            current25DModel = null;
+            currentPattern = null;
+            SetViewMode(ViewMode.Model);
+        }
+
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape)) Cancel();
@@ -413,7 +454,10 @@ namespace Unfolder {
             {
                 try {
                     requestBuild3D = false;
-                    if (current3DModel != null) Destroy(current3DModel);
+                    if (current3DModel != null) {
+                        DestroyImmediate(current3DModel);
+                        current3DModel = null;
+                    }
                     current3DModel = currentPattern.Build3DPatternObject();
                     PlaceIn3DViewer(current3DModel);
                     SetViewMode(ViewMode.Model3D);
@@ -421,6 +465,7 @@ namespace Unfolder {
                 {
                     Debug.Log(ex);
                     taskProgress.Error("Error while creating artcraft preview - "+ex.Message, 1);
+                    DestroyArtcrafts();
                 }
             }
 
@@ -428,8 +473,10 @@ namespace Unfolder {
             {
                 try {
                     requestUnfold = false;
-                    if (current2DModel != null) Destroy(current2DModel);
-                    if (current25DModel != null) Destroy(current25DModel);
+                    if (current2DModel != null) DestroyImmediate(current2DModel);
+                    if (current25DModel != null) DestroyImmediate(current25DModel);
+                    current2DModel = null;
+                    current25DModel = null;
                     current2DModel = currentPattern.Build2DPatternObject();
                     current25DModel = currentPattern.Build25DPatternObject();
                     current2DModel.transform.parent = viewer2D.transform;
@@ -440,12 +487,14 @@ namespace Unfolder {
                 {
                     Debug.Log(ex);
                     taskProgress.Error("Error while creating artcraft preview - " + ex.Message, 1);
+                    DestroyArtcrafts();
                 }
         }
 
             UpdateParametersPanel();
             UpdateModelSize(modelSize);
             UpdateExplodeLevel(explodeAmount);
+            UpdateMainPage();
         }
 
         private void PlaceIn3DViewer(GameObject modelToCenter)
@@ -464,7 +513,7 @@ namespace Unfolder {
 
         private void UpdateModelSize(float newModelSize)
         {
-            if (modelSize != newModelSize) parameterChanged = true;
+            if (modelSize != newModelSize) requireRecompute = true;
             modelSize = newModelSize;
             if (currentModel == null) return;
             Bounds b = UnityUtil.GetMaxBounds(currentModel);
@@ -482,13 +531,7 @@ namespace Unfolder {
 
         void UpdateCurrentModel()
         {
-            Destroy(current2DModel);
-            Destroy(current3DModel);
-            Destroy(current25DModel);
-            current2DModel = null;
-            current3DModel = null;
-            current25DModel = null;
-            currentPattern = null;
+            DestroyArtcrafts();
             currentFaces = UnityUtil.CountFaces(currentModel);
             UpdateModelSize(modelSize);
             UpdateParametersPanel();
@@ -507,11 +550,14 @@ namespace Unfolder {
         {
             mode = viewMode;
 
-            viewer3D.SetActive(mode == ViewMode.Model || mode == ViewMode.Model3D);
+            scale.SetActive(mode == ViewMode.Model || mode == ViewMode.Model3D);
+            mainPage.SetActive(mode == ViewMode.ModelRender);
+
+            viewer3D.SetActive(mode == ViewMode.Model || mode == ViewMode.Model3D || mode == ViewMode.ModelRender);
             viewer25D.SetActive(mode == ViewMode.Model25D);
             viewer2D.SetActive(mode == ViewMode.Model2D);
-
-            if (currentModel != null) currentModel.SetActive(mode == ViewMode.Model);
+            
+            if (currentModel != null) currentModel.SetActive(mode == ViewMode.Model || mode == ViewMode.ModelRender);
             if (current2DModel != null) current2DModel.SetActive(mode == ViewMode.Model2D);
             if (current3DModel != null) current3DModel.SetActive(mode == ViewMode.Model3D);
             if (current25DModel != null) current25DModel.SetActive(mode == ViewMode.Model25D);
