@@ -42,8 +42,8 @@
                 <ui:Slider picking-mode="Ignore" label="Model Size (cm)" value="35" high-value="100" show-input-field="true" low-value="2" name="ModelSize" />
                 <ui:Slider picking-mode="Ignore" label="Page width (mm)" value="210" high-value="1000" show-input-field="true" low-value="1" name="PageWidth" page-size="1" />
                 <ui:Slider picking-mode="Ignore" label="Page height (mm)" value="297" high-value="1000" name="PageHeight" low-value="1" page-size="1" show-input-field="true" />
-                <ui:Slider picking-mode="Ignore" label="Width margins (mm)" value="6" high-value="50" show-input-field="true" name="HeightMargin" page-size="1" />
-                <ui:Slider picking-mode="Ignore" label="Height margins (mm)" value="6" high-value="50" show-input-field="true" name="WidthMargin" page-size="1" />
+                <ui:Slider picking-mode="Ignore" label="Width margins (mm)" value="6" high-value="50" show-input-field="true" name="WidthMargin" page-size="1" />
+                <ui:Slider picking-mode="Ignore" label="Height margins (mm)" value="6" high-value="50" show-input-field="true" name="HeightMargin" page-size="1" />
                 <ui:Button text="Preview my artcraft" display-tooltip-when-elided="true" name="GeneratePreview" style="margin-top: 5px;" />
                 <ui:Button text="Generate artcraft pattern" display-tooltip-when-elided="true" name="GenerateArtcraft" />
             </ui:VisualElement>

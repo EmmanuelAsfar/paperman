@@ -365,7 +365,7 @@ namespace Unfolder
 
         public class ByPerimeter : IComparer<Shape>
         {
-            public int Compare(Shape x, Shape y) => (int)Math.Round(1E5*(y.perimeter - x.perimeter));
+            public int Compare(Shape x, Shape y) => y.perimeter - x.perimeter > 0 ? 1 : -1;
         }
 
         public class ByPattern : IComparer<Shape>
@@ -401,11 +401,11 @@ namespace Unfolder
 
         public Matrix4x4 GetTransformation(Triangle triangle) => shapeTransformation * triangleTransformations[triangle];
 
-        private static void AddTriangle(Vector3 a, Vector3 b, Vector3 c, int oa, int ob, int oc, List<int>[] triangles, List<Vector3> vertices, List<Vector2> uvs, Vector2[] initialUVs, int subMeshId, int zLayer, bool reverse)
+        private void AddTriangle(Vector3 a, Vector3 b, Vector3 c, int oa, int ob, int oc, List<int>[] triangles, List<Vector3> vertices, List<Vector2> uvs, Vector2[] initialUVs, int subMeshId, float zLayer, bool reverse)
         {
             int index = vertices.Count;
             // On ajoute les sommets
-            float z = (float)(zLayer * 1E-3); // TODO Sortir la constante
+            float z = (float)(zLayer * pattern.zLayer);
             Vector3 zShift = -Vector3.Cross(a - c, b - c).normalized * z;
             vertices.Add(a + zShift);
             vertices.Add(b + zShift);
@@ -422,7 +422,7 @@ namespace Unfolder
             triangles[subMeshId].Add(index + (reverse ? 1 : 2));
         }
 
-        private static void AddLine(Vector3 x, Vector3 y, Vector3 zAxis, float lineThickness, bool endThickness, List<int>[] triangles, List<Vector3> vertices, List<Vector2> uvs, Vector2[] initialUVs, int subMeshId, int zLayer, bool reverse)
+        private void AddLine(Vector3 x, Vector3 y, Vector3 zAxis, float lineThickness, bool endThickness, List<int>[] triangles, List<Vector3> vertices, List<Vector2> uvs, Vector2[] initialUVs, int subMeshId, float zLayer, bool reverse)
         {
             Vector3 xAxis = (y - x).normalized;
             Vector3 yAxis = Vector3.Cross(zAxis, y - x).normalized;
@@ -437,7 +437,7 @@ namespace Unfolder
 
             int index = vertices.Count;
             // On ajoute les sommets
-            float z = (float)(zLayer * 1E-3); // TODO Sortir la constante
+            float z = (float)(zLayer * pattern.zLayer); // TODO Sortir la constante
             Vector3 zShift = zAxis.normalized * z;
 
             vertices.Add(x1 + zShift);
@@ -611,7 +611,7 @@ namespace Unfolder
                     AddTriangle(y, x2, y2, triangle.OA, triangle.OB, triangle.OC, trianglesId, vertices, uvs, initialUVs, triangle.subMeshId, +1, true);
                 }
 
-                Vector3 zLayer = (float)(-4 * 1E-2) * Vector3.forward; // TODO Sortir la constante
+                Vector3 zLayer = (float)(-4 * pattern.zLayer) * Vector3.forward; // TODO Sortir la constante
                 Add2DText(border, zLayer, currentShape);
             }
 
@@ -1027,15 +1027,15 @@ namespace Unfolder
                 if (side.IsMale())
                 {
                     // Contour des languettes
-                    AddLine(x, x2, zAxisStrip, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, 4, false);
-                    AddLine(x2, y2, zAxisStrip, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, 4, false);
-                    AddLine(y2, y, zAxisStrip, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, 4, false);
+                    AddLine(x, x2, zAxisStrip, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, 0.2f, false);
+                    AddLine(x2, y2, zAxisStrip, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, 0.2f, false);
+                    AddLine(y2, y, zAxisStrip, pattern.lineThickness, true, trianglesId, vertices, uvs, initialUVs, cutSubMeshId, 0.2f, false);
 
                     // Languettes
-                    AddTriangle(x, x2, y, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 4, false);
-                    AddTriangle(y, x2, y2, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 4, false);
-                    AddTriangle(x, x2, y, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 4, true);
-                    AddTriangle(y, x2, y2, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 4, true);
+                    AddTriangle(x, x2, y, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 0.2f, false);
+                    AddTriangle(y, x2, y2, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 0.2f, false);
+                    AddTriangle(x, x2, y, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 0.2f, true);
+                    AddTriangle(y, x2, y2, 0, 0, 0, trianglesId, vertices, uvs, initialUVs, stripSubMeshId, 0.2f, true);
                 }
                 //Add2DText(side, zLayer, currentSheet); TODO Factoriser avec AddText2D
                 int stripId = side.stripId;
@@ -1053,8 +1053,7 @@ namespace Unfolder
                 float textHeight = 2 * mr.bounds.extents.y;
                 float textWidth = 2 * mr.bounds.extents.x;
                 float scale = Math.Min(0.6f * pattern.stripHeight / textHeight, 1f * (x - y).magnitude / textWidth); // TODO Mettre en constante le 0.6
-                int zLayer = -1;
-                float zShift = (float)(zLayer * 1E-2); // TODO Sortir la constante
+                float zShift = -1E-2f;
                 stripTextObject.transform.position = (Vector3)((x + y) / 2 - xAxis * textWidth * scale / 2 - yAxis * textHeight * scale/5 * 1f) - zAxis * zShift;
                 stripTextObject.transform.localScale = new Vector3(scale, scale);
                 stripTextObject.transform.localRotation = GetRotation(Vector3.right, Vector3.up, xAxis, yAxis);
@@ -1069,7 +1068,7 @@ namespace Unfolder
             sheetMesh.RecalculateNormals(pattern.angleNoFold);
             sheetMesh.RecalculateBounds();
             sheetMesh.RecalculateTangents();
-            sheetMesh.Optimize(); // TODO Corriger
+            sheetMesh.Optimize();
 
             currentSheet.AddComponent<MeshFilter>().mesh = sheetMesh;
 

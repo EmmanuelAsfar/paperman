@@ -192,9 +192,6 @@ namespace Unfolder {
             mainSheet.transform.localScale = new Vector3(currentPattern.sheetSize.x, currentPattern.sheetSize.y, 1) * 10 * scale;
             titleMesh.text = mainPanel.Title.text;
             authorMesh.text = mainPanel.Author.text;
-            float ratio = currentPattern.sheetSize.x / currentPattern.sheetSize.y;
-            titleMesh.transform.localScale = new Vector3(Math.Min(1/ratio, ratio), Math.Min(1, ratio), 1)/100f;
-            authorMesh.transform.localScale = new Vector3(Math.Min(1/ratio, ratio), Math.Min(1, ratio), 1) / 80f;
         }
 
         private void UpdateParametersPanel()

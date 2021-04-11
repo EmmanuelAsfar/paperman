@@ -25,6 +25,8 @@ namespace Unfolder
         public bool acceptMixedMaterials = true;
 
         // Pour nesting and layout
+        public float zLayer = 0.1f;
+
         public float shapeMaxSizeRatio = 0.7f;
         public int maxShapesPerBatch = 300;
         public Vector2 sheetSize = new Vector2(29.7f, 21f);
@@ -55,6 +57,8 @@ namespace Unfolder
         public readonly Material backMaterial;
         public readonly Material back3DMaterial;
         public readonly Material gizmoMaterial;
+
+        public readonly GameObject sheetPrefab;
 
         public readonly Shader textShader;
         public readonly Shader unlitColorShader;
@@ -93,6 +97,8 @@ namespace Unfolder
             backMaterial = Resources.Load("Material/BackMaterial", typeof(Material)) as Material;
             back3DMaterial = Resources.Load("Material/Back3DMaterial", typeof(Material)) as Material;
             gizmoMaterial = Resources.Load("Material/GizmoMaterial", typeof(Material)) as Material;
+
+            sheetPrefab = Resources.Load("Prefabs/Sheet") as GameObject;
 
             textShader = Resources.Load("Shader/OneSideTextShader", typeof(Shader)) as Shader;
             unlitColorShader = Shader.Find("Unlit/Color");
@@ -408,60 +414,22 @@ namespace Unfolder
             triangles[subMeshId].Add(index + 2);
         }
 
-        public GameObject CreateSheet(String name, Material material)
+        public GameObject CreateSheet(String name, bool logoActive)
         {
-            GameObject sheet = new GameObject(name);
-            var mr = sheet.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = material;
-            Mesh mesh = new Mesh();
-            MeshFilter meshFilter = sheet.AddComponent<MeshFilter>();
-
-            Vector3[] vertices = new Vector3[4]
-            {
-            new Vector3(-sheetSize.x/2, -sheetSize.y/2, 0),
-            new Vector3(+sheetSize.x/2, -sheetSize.y/2, 0),
-            new Vector3(-sheetSize.x/2, +sheetSize.y/2, 0),
-            new Vector3(+sheetSize.x/2, +sheetSize.y/2, 0)
-            };
-            mesh.vertices = vertices;
-
-            int[] tris = new int[6]
-            {
-            // lower left triangle
-            0, 2, 1,
-            // upper right triangle
-            2, 3, 1
-            };
-            mesh.triangles = tris;
-
-            Vector3[] normals = new Vector3[4]
-            {
-                -Vector3.forward,
-                -Vector3.forward,
-                -Vector3.forward,
-                -Vector3.forward
-            };
-            mesh.normals = normals;
-
-            Vector2[] uv = new Vector2[4]
-            {
-                new Vector2(0, 0),
-                new Vector2(1, 0),
-                new Vector2(0, 1),
-                new Vector2(1, 1)
-            };
-            mesh.uv = uv;
-
-            meshFilter.mesh = mesh;
-
+            GameObject sheet = GameObject.Instantiate(sheetPrefab);
+            SheetManager sm = sheet.GetComponent<SheetManager>();
+            sm.sheetMargin = sheetMargin;
+            sm.logoActive = logoActive;
+            sheet.name = name;
+            sheet.transform.localScale = new Vector3(sheetSize.x, sheetSize.y, 1);
             var collider = sheet.AddComponent<PolygonCollider2D>();
             collider.isTrigger = true;
-            Vector2 b1 = new Vector2(-sheetSize.x / 2, -sheetSize.y / 2);
-            Vector2 b2 = new Vector2(-sheetSize.x / 2, +sheetSize.y / 2);
-            Vector2 b3 = new Vector2(+sheetSize.x / 2, +sheetSize.y / 2);
-            Vector2 b4 = new Vector2(+sheetSize.x / 2, -sheetSize.y / 2);
-            Vector2 mx = Vector2.right * (sheetMargin.x + stripHeight - 2E-1f); // TODO Extraire constante (pour eviter un colide à 1 pixel)
-            Vector2 my = Vector2.up * (sheetMargin.y + stripHeight - 2E-1f); // TODO Extraire constante (pour eviter un colide à 1 pixel)
+            Vector2 b1 = new Vector2(-0.5f, -0.5f);
+            Vector2 b2 = new Vector2(-0.5f, +0.5f);
+            Vector2 b3 = new Vector2(+0.5f, +0.5f);
+            Vector2 b4 = new Vector2(+0.5f, -0.5f);
+            Vector2 mx = Vector2.right * (sheetMargin.x + stripMinHeight - 2E-1f)/sheetSize; // TODO Extraire constante (pour eviter un colide à 1 pixel)
+            Vector2 my = Vector2.up * (sheetMargin.y + stripMinHeight - 2E-1f) / sheetSize; // TODO Extraire constante (pour eviter un colide à 1 pixel)
             collider.pathCount = 4;
             collider.SetPath(0, new Vector2[] { b1, b1 + mx, b2 + mx, b2 });
             collider.SetPath(1, new Vector2[] { b2, b2 - my, b3 - my, b3 });
@@ -469,7 +437,6 @@ namespace Unfolder
             collider.SetPath(3, new Vector2[] { b4, b4 + my, b1 + my, b1 });
             var rb = sheet.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
-
             return sheet;
         }
 
@@ -483,11 +450,11 @@ namespace Unfolder
             {
                 GameObject sheet = new GameObject(object3D.name + "page_" + (sheetId+1));
 
-                GameObject sheetBack = CreateSheet("sheetBg", backMaterial);
+                GameObject sheetBack = CreateSheet("sheetBg", true);
                 sheetBack.transform.position = sheetSize / 2;
                 sheetBack.transform.parent = sheet.transform;
 
-                GameObject sheetFront = CreateSheet("sheetFg", backMaterial);
+                GameObject sheetFront = CreateSheet("sheetFg", false);
                 sheetFront.transform.position = sheetSize / 2;
                 sheetFront.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
                 sheetFront.transform.parent = sheet.transform;
