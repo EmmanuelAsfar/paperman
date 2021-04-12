@@ -11,6 +11,11 @@ public enum ViewMode { Model, ModelRender, Model3D, Model2D, Model25D }
 namespace Unfolder {
     public class PapermanPlayer : MonoBehaviour
     {
+        public static Vector2 A4Size = new Vector2(21f, 29.7f);
+        public static Vector2 A3Size = new Vector2(42f, 29.7f);
+        public static Vector2 LetterSize = new Vector2(21.6f, 27.9f);
+        public static Vector2 StandardMargins = new Vector2(0.6f, 0.6f);
+
         [Range(0, 1000)]
         public int iterations = 0;
 
