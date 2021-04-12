@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace Unfolder {
         [Range(0, 0.5f)]
         public float lineThickness = 0.01f;
         [Range(150, 1200)]
-        public float resolutionDPI = 300f;
+        public float resolutionDPI = 200f;
 
         // Pour impression3D
         [Range(0, 20f)]
@@ -56,14 +57,17 @@ namespace Unfolder {
         [Range(0, 0.5f)]
         public float foldThickness = 0.08f;
 
-        public UnityEngine.Color errorColor, warningColor, okColor;
+        public Color errorColor, warningColor, okColor;
 
-        public GameObject originalModel;
+        private GameObject originalModel;
         public GameObject currentModel;
         private Pattern currentPattern;
         private GameObject current2DModel;
         private GameObject current3DModel;
         private GameObject current25DModel;
+
+        public Color activeColor = Color.cyan;
+        public Color passiveColor = Color.gray;
 
         public Camera orbitCamera;
         public Camera backCamera;
@@ -78,7 +82,10 @@ namespace Unfolder {
 
         public ViewMode mode;
 
-        private bool requestBuild3D, requestUnfold;
+        private bool requestBuild3D;
+        private bool requestUnfold;
+        private bool requestExport;
+
         private bool createPNG;
         private bool createPDF;
         private bool create25D;
@@ -88,13 +95,14 @@ namespace Unfolder {
 
         private string modelName;
         private string savePath;
+        private string exportPath; // path of the export zip file
         private string loadPath = ".";
         private static int tempId;
         
 
         private TaskProgress taskProgress;
         private bool requireRecompute;
-        private bool backView = true;
+        private bool backView = false;
 
         public MainControlPanel mainPanel;
         private ColorPalette palette;
@@ -112,7 +120,6 @@ namespace Unfolder {
 
             mainPanel.ImportModelFromFile.RegisterCallback<ClickEvent>(ev => ImportModelFromFile(false));
             mainPanel.RotateModel.RegisterCallback<ClickEvent>(ev => RotateModel());
-            mainPanel.PickInLibrary.RegisterCallback<ClickEvent>(ev => PickInLibrary());
             mainPanel.ReduceMesh.RegisterCallback<ClickEvent>(ev => ReduceMesh());
             mainPanel.GeneratePreview.RegisterCallback<ClickEvent>(ev => GeneratePreview());
             mainPanel.GenerateArtcraft.RegisterCallback<ClickEvent>(ev => GenerateArtcraft());
@@ -121,9 +128,12 @@ namespace Unfolder {
             mainPanel.ViewModel.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model));
             mainPanel.ViewPreview.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model3D));
             mainPanel.ViewMainPage.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.ModelRender));
-            mainPanel.View2D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model2D));
+            mainPanel.View2DFront.RegisterCallback<ClickEvent>(ev => { backView = false; SetViewMode(ViewMode.Model2D); });
+            mainPanel.View2DBack.RegisterCallback<ClickEvent>(ev => { backView = true; SetViewMode(ViewMode.Model2D); });
             mainPanel.View25D.RegisterCallback<ClickEvent>(ev => SetViewMode(ViewMode.Model25D));
-            mainPanel.SwitchFrontBack.RegisterCallback<ClickEvent>(ev => SwitchFrontBack());
+            mainPanel.A4Size.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(A4Size, StandardMargins));
+            mainPanel.A3Size.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(A3Size, StandardMargins));
+            mainPanel.LetterSize.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(LetterSize, StandardMargins));
 
             mainPanel.ModelSize.RegisterValueChangedCallback(x => UpdateModelSize(x.newValue));
             mainPanel.ExplodeAmount.RegisterValueChangedCallback(x => UpdateExplodeLevel(x.newValue));
@@ -160,6 +170,17 @@ namespace Unfolder {
             UnityUtil.ApplySwatch(current3DModel, subMeshCount, palette.GetSwatch());
             UnityUtil.ApplySwatch(current2DModel, subMeshCount, palette.GetSwatch());
             UnityUtil.ApplySwatch(current25DModel, subMeshCount, palette.GetSwatch());
+        }
+
+        private void UpdatePageSetup(Vector2 sheetSize, Vector2 sheetMargin)
+        {
+            this.sheetSize = sheetSize;
+            this.sheetMargin = sheetMargin;
+            mainPanel.PageWidth.value = (int)(sheetSize.x*10);
+            mainPanel.PageHeight.value = (int)(sheetSize.y*10);
+            mainPanel.WidthMargin.value = (int)(sheetMargin.x*10);
+            mainPanel.HeightMargin.value = (int)(sheetMargin.y*10);
+            requireRecompute = true;
         }
 
         private void Start()
@@ -206,18 +227,25 @@ namespace Unfolder {
             
             mainPanel.RotateModel.visible = (mode == ViewMode.Model || mode == ViewMode.ModelRender) && currentModel != null;
             mainPanel.ExplodeAmount.visible = mode == ViewMode.Model3D;
-            mainPanel.SwitchFrontBack.visible = mode == ViewMode.Model2D;
 
             mainPanel.ViewModel.visible = currentModel != null;
             mainPanel.ViewPreview.visible = current3DModel != null;
-            mainPanel.View2D.visible = current2DModel != null;
+            mainPanel.View2DFront.visible = current2DModel != null;
+            mainPanel.View2DBack.visible = current2DModel != null;
             mainPanel.View25D.visible = current25DModel != null;
             mainPanel.ViewMainPage.visible = current2DModel != null || current25DModel != null;
 
             mainPanel.SimplifyModel.visible = currentModel != null;
             mainPanel.ChooseColors.visible = currentModel != null;
             mainPanel.BuildArtcraft.visible = currentModel != null;
-            mainPanel.ExportArtcraft.visible = current2DModel != null || current25DModel != null;
+            mainPanel.ExportArtcraft.visible = requireRecompute == false && (current2DModel != null || current25DModel != null);
+
+            mainPanel.ViewModel.style.backgroundColor = mode == ViewMode.Model ? activeColor : passiveColor;
+            mainPanel.ViewPreview.style.backgroundColor = mode == ViewMode.Model3D ? activeColor : passiveColor;
+            mainPanel.View2DFront.style.backgroundColor = (mode == ViewMode.Model2D && !backView) ? activeColor : passiveColor;
+            mainPanel.View2DBack.style.backgroundColor = (mode == ViewMode.Model2D && backView) ? activeColor : passiveColor;
+            mainPanel.View25D.style.backgroundColor = mode == ViewMode.Model25D ? activeColor : passiveColor;
+            mainPanel.ViewMainPage.style.backgroundColor = mode == ViewMode.ModelRender ? activeColor : passiveColor;
 
             mainPanel.ControlPanel.SetEnabled(!taskProgress.IsComputing());
 
@@ -265,11 +293,6 @@ namespace Unfolder {
             palette.AddSwatch(UnityUtil.GetSwatch(currentModel), true);
             UpdateCurrentModel();
             taskProgress.Ok("Model "+ modelName+ " loaded", 1);
-        }
-
-        private void PickInLibrary()
-        {
-            // TODO Implementer
         }
 
         private void ReduceMesh()
@@ -366,20 +389,9 @@ namespace Unfolder {
             t.Start();
         }
 
-        //IEnumerator ChangeColour(GameObject target)
-        //{
-        //    var material = target.GetComponent<Renderer>().material;
-        //    var elapsedTime = 0.0f;
-        //    while (elapsedTime < duration)
-        //    {
-        //        elapsedTime += Time.deltaTime;
-        //        material.color = Color.Lerp(material.color, targetColor, elapsedTime / duration);
-        //        yield return null; // Signale l'interruption, Unity peut reprendre la main pour ses tâches internes. La valeur null définit une interruption jusqu'à la prochaine frame.
-        //    }
-        //}
-
         private void SaveArtcraft()
         {
+            if (taskProgress.IsComputing()) return;
             if (currentPattern == null || (current2DModel == null && createPNG) || (current25DModel == null && create25D))
             {
                 taskProgress.Warning("Please generate an artcraft before saving", 1);
@@ -396,47 +408,13 @@ namespace Unfolder {
                 taskProgress.Warning("No export file chosen. Export cancelled", 1);
                 return;
             }
-            savePath = Path.GetDirectoryName(filePath);
-            String saveName = Path.GetFileNameWithoutExtension(filePath);
-            bool dirExist = true;
-            String tempPath = null;
-            while (dirExist)
-            {
-                tempId++;
-                tempPath = Path.Combine(Application.temporaryCachePath, saveName + "_" + tempId);
-                dirExist = Directory.Exists(tempPath);
-            }
-            Directory.CreateDirectory(tempPath);
-            Debug.Log("Export temps files at : " + tempPath);
-            if (createPNG || createPDF)
-            {
-                var pngFilesPath = new List<String>();
-                SetViewMode(ViewMode.ModelRender);
-                pngFilesPath.AddRange(currentPattern.CaptureMainPage(tempPath, saveName));
-                SetViewMode(ViewMode.Model2D);
-                pngFilesPath.AddRange(currentPattern.Capture2DImages(tempPath, saveName));
-                if (createPDF) Paperman.BuildPdf(pngFilesPath, saveName, tempPath, sheetSize, sheetMargin);
-                if (!createPNG) foreach (var pngFile in pngFilesPath) File.Delete(pngFile);
-            }
-            if (create25D)
-            {
-                SetViewMode(ViewMode.Model25D);
-                Paperman.ExportChildrenInSTL(current25DModel, tempPath);
-            }
-            UnityUtil.ZipFiles(tempPath, filePath);
-            taskProgress.Ok("Artcraft zip file generated here : "+ filePath, 1);
-            SetViewMode(ViewMode.ModelRender);
+            exportPath = filePath;
+            requestExport = true;
         }
 
         private void Cancel()
         {
             taskProgress.RequestInterruption();
-        }
-
-        private void SwitchFrontBack()
-        {
-            backView = !backView;
-            UpdateCameraView();
         }
 
         private void DestroyArtcrafts()
@@ -494,12 +472,80 @@ namespace Unfolder {
                     taskProgress.Error("Error while creating artcraft preview - " + ex.Message, 1);
                     DestroyArtcrafts();
                 }
-        }
+            }
 
             UpdateParametersPanel();
             UpdateModelSize(modelSize);
             UpdateExplodeLevel(explodeAmount);
             UpdateMainPage();
+        }
+
+        public void LateUpdate()
+        {
+            if (!requestExport) return;
+            requestExport = false;
+            try
+            {
+                SetViewMode(ViewMode.ModelRender);
+                UpdateMainPage();
+                savePath = Path.GetDirectoryName(exportPath);
+                String saveName = Path.GetFileNameWithoutExtension(exportPath);
+                bool dirExist = true;
+                String tempPath = null;
+                while (dirExist)
+                {
+                    tempId++;
+                    tempPath = Path.Combine(Application.temporaryCachePath, saveName + "_" + tempId);
+                    dirExist = Directory.Exists(tempPath);
+                }
+                Directory.CreateDirectory(tempPath);
+                Debug.Log("Export temps files at : " + tempPath);
+
+                var pngFilesPath = new List<String>();
+                if (createPNG || createPDF)
+                {
+                    SetViewMode(ViewMode.ModelRender);
+                    pngFilesPath.AddRange(currentPattern.CaptureMainPage(tempPath, saveName));
+                    SetViewMode(ViewMode.Model2D);
+                    pngFilesPath.AddRange(currentPattern.Capture2DImages(tempPath, saveName, taskProgress));
+                }
+                if (create25D)
+                {
+                    SetViewMode(ViewMode.Model25D);
+                    Paperman.ExportChildrenInSTL(current25DModel, tempPath);
+                }
+                var t = new Task(() => {
+                    taskProgress.NotifyStart();
+                    try
+                    {
+                        if (createPDF)
+                        {
+                            taskProgress.Ok("Creating " + pngFilesPath.Count + " pages in " + saveName + " pdf file", 0.5f);
+                            Paperman.BuildPdf(pngFilesPath, saveName, tempPath, sheetSize, sheetMargin);
+                        }
+                        if (!createPNG) foreach (var pngFile in pngFilesPath) File.Delete(pngFile);
+
+                        taskProgress.Ok("Crating artcraft zip file" + exportPath, 0.75f);
+                        UnityUtil.ZipFiles(tempPath, exportPath);
+                        taskProgress.Ok("Artcraft zip file generated here : " + exportPath, 1);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Log(ex);
+                        taskProgress.Error("Artcraft export file not generated : " + ex.Message);
+                    }
+                    finally
+                    {
+                        taskProgress.NotifyStop();
+                    }
+                });
+                t.Start();
+            }
+            catch (Exception ex)
+            {
+                Debug.Log(ex);
+                taskProgress.Error("Coudn't save artcraft files : " + ex.Message);
+            }
         }
 
         private void PlaceIn3DViewer(GameObject modelToCenter)

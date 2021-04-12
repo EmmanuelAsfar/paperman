@@ -22,21 +22,23 @@ namespace Unfolder
 
         public Button ImportModelFromFile;
         public Button RotateModel;
-        public Button PickInLibrary;
         public Button ReduceMesh;
         public Button GeneratePreview;
         public Button GenerateArtcraft;
         public Button SaveArtcraft;
         public Button Cancel;
-        public Button View2D;
+        public Button View2DFront;
+        public Button View2DBack;
         public Button View25D;
         public Button ViewModel;
         public Button ViewPreview;
         public Button ViewMainPage;
         public Button PreviousSwatch;
         public Button NextSwatch;
-        public Button SwitchFrontBack;
         public Button ShuffleSwatch;
+        public Button A4Size;
+        public Button A3Size;
+        public Button LetterSize;
 
         public Button[] colorButtons;
 
@@ -79,7 +81,6 @@ namespace Unfolder
 
             ImportModelFromFile = root.Q<Button>("ImportModelFromFile");
             RotateModel = root.Q<Button>("RotateModel");
-            PickInLibrary = root.Q<Button>("PickInLibrary");
             ReduceMesh = root.Q<Button>("ReduceMesh");
             GeneratePreview = root.Q<Button>("GeneratePreview");
             GenerateArtcraft = root.Q<Button>("GenerateArtcraft");
@@ -88,12 +89,15 @@ namespace Unfolder
             ViewModel = root.Q<Button>("ViewModel");
             ViewPreview = root.Q<Button>("ViewPreview");
             ViewMainPage = root.Q<Button>("ViewMainPage");
-            View2D = root.Q<Button>("View2D");
+            View2DFront = root.Q<Button>("View2DFront");
+            View2DBack = root.Q<Button>("View2DBack");
             View25D = root.Q<Button>("View25D");
             PreviousSwatch = root.Q<Button>("PreviousSwatch");
             NextSwatch = root.Q<Button>("NextSwatch");
-            SwitchFrontBack = root.Q<Button>("SwitchFrontBack");
             ShuffleSwatch = root.Q<Button>("ShuffleSwatch");
+            A4Size = root.Q<Button>("A4Size");
+            A3Size = root.Q<Button>("A3Size");
+            LetterSize = root.Q<Button>("LetterSize");
 
             ModelSize = root.Q<Slider>("ModelSize");
             ExplodeAmount = root.Q<Slider>("ExplodeAmount");

@@ -1,10 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <ui:VisualElement style="justify-content: flex-start; height: auto; flex-direction: row; flex-grow: 1;">
-        <ui:VisualElement name="ControlPanel" style="height: 100%; width: 30%; min-width: 250px; position: relative; min-height: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; background-color: rgb(207, 207, 207); padding-left: 10px; padding-right: 10px; padding-top: 15px; padding-bottom: 10px; max-width: 350px; opacity: 0.9;">
+        <ui:VisualElement name="ControlPanel" style="height: 100%; width: 30%; min-width: 100px; position: relative; min-height: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; background-color: rgb(207, 207, 207); padding-left: 10px; padding-right: 10px; padding-top: 15px; padding-bottom: 10px; max-width: 350px; opacity: 0.9;">
             <ui:VisualElement name="ChooseModel">
                 <ui:Label text="1. Choose a model" display-tooltip-when-elided="true" style="-unity-font-style: bold; background-color: rgb(137, 137, 137); padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px; margin-bottom: 5px;" />
                 <ui:Button text="Import a 3D model from file..." display-tooltip-when-elided="true" name="ImportModelFromFile" />
-                <ui:Button text="Pick an existing model (not yet implemented)" display-tooltip-when-elided="true" name="PickInLibrary" style="white-space: normal;" />
             </ui:VisualElement>
             <ui:VisualElement name="ChooseColors">
                 <ui:Label text="2. Choose a color swatch" display-tooltip-when-elided="true" style="-unity-font-style: bold; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px; background-color: rgb(143, 143, 143); margin-top: 10px; margin-bottom: 5px;" />
@@ -20,8 +19,8 @@
                     <ui:Button text="Shuffle" display-tooltip-when-elided="true" name="ShuffleSwatch" style="align-items: auto;" />
                 </ui:VisualElement>
                 <ui:VisualElement style="margin-left: 5px; margin-right: 5px; height: 25px; flex-direction: row; justify-content: center; align-items: stretch;">
-                    <ui:Button text="&lt; Previous swatch" display-tooltip-when-elided="true" name="PreviousSwatch" style="width: 120px; position: relative; white-space: nowrap;" />
-                    <ui:Button text="Next swatch &gt;" display-tooltip-when-elided="true" name="NextSwatch" style="width: 120px; position: relative; left: auto;" />
+                    <ui:Button text="&lt; Previous swatch" display-tooltip-when-elided="true" name="PreviousSwatch" style="width: 120px; position: relative; white-space: nowrap; flex-shrink: 1; flex-grow: 1;" />
+                    <ui:Button text="Next swatch &gt;" display-tooltip-when-elided="true" name="NextSwatch" style="width: 120px; position: relative; left: auto; flex-shrink: 1; flex-grow: 1;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="SimplifyModel">
@@ -29,48 +28,62 @@
                     <ui:Label text="3. Simplify your model&#10;" display-tooltip-when-elided="true" style="-unity-font-style: bold; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; -unity-text-align: middle-left;" />
                     <ui:Label text="(currently 850 faces)" display-tooltip-when-elided="true" name="FaceCount" style="flex-wrap: wrap; -unity-text-align: middle-left; padding-left: 5px;" />
                 </ui:VisualElement>
-                <ui:VisualElement style="flex-direction: column;">
-                    <ui:Slider picking-mode="Ignore" label="Reduce face count to" value="300" high-value="1000" inverted="false" low-value="50" direction="Horizontal" usage-hints="None" tooltip="Select the target number of faces for your model" name="TargetFaces" show-input-field="true" focusable="true" page-size="1" style="justify-content: flex-end; align-items: stretch; flex-direction: row;" />
-                    <ui:Button text="Simplify my model" display-tooltip-when-elided="true" name="ReduceMesh" />
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:Slider picking-mode="Ignore" label="Reduce face count to" value="300" high-value="1000" inverted="false" low-value="50" direction="Horizontal" usage-hints="None" tooltip="Select the target number of faces for your model" name="TargetFaces" show-input-field="true" focusable="true" page-size="1" style="justify-content: flex-end; align-items: flex-start; flex-direction: column; flex-wrap: nowrap; flex-shrink: 1; flex-grow: 1;" />
+                    <ui:Button text="Simplify my model" display-tooltip-when-elided="true" name="ReduceMesh" style="justify-content: space-between;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="BuildArtcraft">
                 <ui:Label text="4. Generate your artcraft" display-tooltip-when-elided="true" style="margin-top: 10px; -unity-font-style: bold; -unity-text-align: upper-left; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px; background-color: rgb(149, 149, 149); -unity-text-outline-color: rgb(143, 143, 143); margin-bottom: 5px;" />
+                <ui:Slider picking-mode="Ignore" label="Model Size (cm)" value="40" high-value="100" show-input-field="true" low-value="2" name="ModelSize" style="flex-shrink: 1; flex-wrap: wrap; flex-grow: 1; align-items: flex-start;" />
                 <ui:VisualElement style="flex-direction: column; justify-content: center; align-items: flex-start;">
-                    <ui:Toggle label="Separate shapes per color" name="SortColors" value="true" tooltip="Tick this option if you want to print your artcraft on colored sheets" style="flex-direction: row-reverse; justify-content: center;" />
+                    <ui:Toggle label="Sort shapes by color" name="SortColors" value="true" tooltip="Tick this option if you want to print your artcraft on colored sheets" style="flex-direction: row-reverse; justify-content: center;" />
                 </ui:VisualElement>
-                <ui:Slider picking-mode="Ignore" label="Model Size (cm)" value="35" high-value="100" show-input-field="true" low-value="2" name="ModelSize" />
-                <ui:Slider picking-mode="Ignore" label="Page width (mm)" value="210" high-value="1000" show-input-field="true" low-value="1" name="PageWidth" page-size="1" />
-                <ui:Slider picking-mode="Ignore" label="Page height (mm)" value="297" high-value="1000" name="PageHeight" low-value="1" page-size="1" show-input-field="true" />
-                <ui:Slider picking-mode="Ignore" label="Width margins (mm)" value="6" high-value="50" show-input-field="true" name="WidthMargin" page-size="1" />
-                <ui:Slider picking-mode="Ignore" label="Height margins (mm)" value="6" high-value="50" show-input-field="true" name="HeightMargin" page-size="1" />
-                <ui:Button text="Preview my artcraft" display-tooltip-when-elided="true" name="GeneratePreview" style="margin-top: 5px;" />
-                <ui:Button text="Generate artcraft pattern" display-tooltip-when-elided="true" name="GenerateArtcraft" />
+                <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <ui:Label text="Printing size : " display-tooltip-when-elided="true" style="flex-shrink: 1;" />
+                    <ui:VisualElement style="flex-direction: row; flex-grow: 1;">
+                        <ui:Button text="A4" display-tooltip-when-elided="true" name="A4Size" style="flex-grow: 1; flex-shrink: 1;" />
+                        <ui:Button text="A3" display-tooltip-when-elided="true" name="A3Size" style="flex-grow: 1; flex-shrink: 1;" />
+                        <ui:Button text="Letter" display-tooltip-when-elided="true" name="LetterSize" style="white-space: nowrap; flex-grow: 1; flex-shrink: 1;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Foldout text="Advanced page setup" value="false">
+                    <ui:Slider picking-mode="Ignore" label="Page width (mm)" value="210" high-value="1000" show-input-field="true" low-value="1" name="PageWidth" page-size="1" />
+                    <ui:Slider picking-mode="Ignore" label="Page height (mm)" value="297" high-value="1000" name="PageHeight" low-value="1" page-size="1" show-input-field="true" />
+                    <ui:Slider picking-mode="Ignore" label="Width margins (mm)" value="6" high-value="50" show-input-field="true" name="WidthMargin" page-size="1" />
+                    <ui:Slider picking-mode="Ignore" label="Height margins (mm)" value="6" high-value="50" show-input-field="true" name="HeightMargin" page-size="1" />
+                </ui:Foldout>
+                <ui:VisualElement style="flex-direction: row; justify-content: space-between;">
+                    <ui:Button text="Preview my artcraft" display-tooltip-when-elided="true" name="GeneratePreview" style="flex-grow: 1; white-space: normal; flex-shrink: 1;" />
+                    <ui:Button text="Build my artcraft" display-tooltip-when-elided="true" name="GenerateArtcraft" style="flex-grow: 1; flex-wrap: nowrap; white-space: normal; flex-shrink: 1;" />
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="ExportArtcraft">
-                <ui:Label text="5. Export your artcraft patterns" display-tooltip-when-elided="true" style="-unity-font-style: bold; margin-top: 10px; padding-top: 5px; padding-left: 5px; padding-right: 5px; padding-bottom: 5px; background-color: rgb(154, 154, 154); margin-bottom: 5px;" />
-                <ui:TextField picking-mode="Ignore" label="Artcraft name" value="filler text" text="Paperman" name="Title" />
+                <ui:Label text="5. Export your artcraft pattern" display-tooltip-when-elided="true" style="-unity-font-style: bold; margin-top: 10px; padding-top: 5px; padding-left: 5px; padding-right: 5px; padding-bottom: 5px; background-color: rgb(154, 154, 154); margin-bottom: 5px;" />
+                <ui:TextField picking-mode="Ignore" label="Artcraft name" value="filler text" text="Paperman" name="Title" style="justify-content: space-between; flex-direction: row;" />
                 <ui:TextField picking-mode="Ignore" label="Author / Credit" value="filler text" name="Author" />
                 <ui:VisualElement style="align-items: flex-start; flex-wrap: nowrap; flex-direction: column; white-space: normal;">
                     <ui:Toggle label="Generate paper pattern (PDF file)" name="CreatePDF" value="true" style="flex-direction: row-reverse;" />
-                    <ui:Toggle label="Generate paper patterns (PNG files)" value="false" name="CreatePNG" style="flex-direction: row-reverse;" />
-                    <ui:Toggle label="Generate 3D Printer pattern (STL files - beta)" value="false" name="Create25D" style="flex-direction: row-reverse; justify-content: space-around;" />
+                    <ui:Foldout text="Other formats" value="false">
+                        <ui:Toggle label="Generate paper patterns (PNG files)" value="false" name="CreatePNG" style="flex-direction: row-reverse;" />
+                        <ui:Toggle label="Generate 3D Printer pattern (STL files - beta)" value="false" name="Create25D" style="flex-direction: row-reverse; justify-content: space-around;" />
+                    </ui:Foldout>
                 </ui:VisualElement>
-                <ui:Button text="Export files..." display-tooltip-when-elided="true" name="SaveArtcraft" />
+                <ui:Button text="Save my artcraft..." display-tooltip-when-elided="true" name="SaveArtcraft" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="NavigationPanel" style="align-items: stretch; flex-direction: column; justify-content: space-between; flex-grow: 1; flex-wrap: nowrap; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">
-            <ui:VisualElement name="ActionPanel" style="flex-direction: row; justify-content: space-between;">
-                <ui:VisualElement name="SwitchPanel" style="flex-direction: row; height: 50px; flex-grow: 1; margin-right: 20px; max-height: 50px;">
-                    <ui:Button text="View Model" display-tooltip-when-elided="true" name="ViewModel" style="width: auto; position: relative; left: auto; opacity: 0.7; height: auto; flex-grow: 1; flex-wrap: wrap; white-space: normal; cursor: initial; max-width: 130px;" />
-                    <ui:Button text="Artcraft Preview" display-tooltip-when-elided="true" name="ViewPreview" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
-                    <ui:Button text="View Paper Artcraft" display-tooltip-when-elided="true" name="View2D" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
-                    <ui:Button text="View 3D Printer pattern (beta)" display-tooltip-when-elided="true" name="View25D" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
-                    <ui:Button text="View Front page" display-tooltip-when-elided="true" name="ViewMainPage" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px;" />
+            <ui:VisualElement name="ActionPanel" style="flex-direction: row; justify-content: space-between; flex-grow: 1;">
+                <ui:VisualElement name="SwitchPanel" style="flex-direction: row; height: auto; flex-grow: 1; margin-right: 20px; max-height: none;">
+                    <ui:Button text="View Model" display-tooltip-when-elided="true" name="ViewModel" style="width: auto; position: relative; left: auto; opacity: 0.7; height: auto; flex-grow: 1; flex-wrap: wrap; white-space: normal; cursor: initial; max-width: 130px; flex-shrink: 1;" />
+                    <ui:Button text="Artcraft Preview" display-tooltip-when-elided="true" name="ViewPreview" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px; flex-shrink: 1;" />
+                    <ui:Button text="View Paper Pattern (front)" display-tooltip-when-elided="true" name="View2DFront" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px; flex-shrink: 1;" />
+                    <ui:Button text="View Paper Pattern (back)" display-tooltip-when-elided="true" name="View2DBack" style="width: auto; height: auto; opacity: 0.7; flex-wrap: nowrap; white-space: normal; flex-grow: 1; position: relative; max-width: 150px; flex-shrink: 1;" />
+                    <ui:Button text="View Front page" display-tooltip-when-elided="true" name="ViewMainPage" style="width: auto; position: relative; left: auto; opacity: 0.7; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px; flex-shrink: 1;" />
+                    <ui:Button text="View 3D Printer pattern (beta)" display-tooltip-when-elided="true" name="View25D" style="width: auto; position: relative; left: auto; opacity: 0.4; flex-grow: 1; flex-wrap: wrap; white-space: normal; max-width: 130px; flex-shrink: 1;" />
                 </ui:VisualElement>
-                <ui:VisualElement style="align-items: stretch; width: 150px; justify-content: flex-start; flex-direction: row-reverse;">
-                    <ui:Button text="Rotate model 90°" display-tooltip-when-elided="true" name="RotateModel" style="opacity: 0.7; flex-grow: 1; position: absolute; width: 150px; height: 50px;" />
-                    <ui:Button text="Switch Font / Back page view" display-tooltip-when-elided="true" name="SwitchFrontBack" style="width: 150px; height: 50px; opacity: 0.7; flex-wrap: nowrap; white-space: normal; flex-grow: 1; position: absolute;" />
+                <ui:VisualElement style="align-items: stretch; width: auto; justify-content: flex-start; flex-direction: row-reverse;">
+                    <ui:Button text="Rotate model 90°" display-tooltip-when-elided="true" name="RotateModel" style="opacity: 0.7; white-space: normal;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement style="flex-grow: 1; align-items: flex-end; justify-content: space-between; flex-direction: column; padding-left: 8px; padding-right: 8px; padding-top: 8px; padding-bottom: 8px;">

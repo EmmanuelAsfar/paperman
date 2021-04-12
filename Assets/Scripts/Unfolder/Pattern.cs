@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
-using UnityEngine.Rendering;
 using System.Linq;
 using NestingLibPort.Util;
 using NestingLibPort.Data;
 using NestingLibPort;
-using System.Diagnostics;
 using System.Threading;
 
 namespace Unfolder
@@ -519,10 +515,11 @@ namespace Unfolder
             return allShapes;
         }
 
-        public List<String> Capture2DImages(String path, String name)
+        public List<String> Capture2DImages(String path, String name, TaskProgress taskProgress)
         {
             var filePaths = new List<String>();
             int i = 1;
+            taskProgress.Ok("Processing page "+i, (1f * i) / sheets2D.Count);
             foreach (var sheet in sheets2D) {
                 filePaths.AddRange(SheetCapture.CaptureSheet(path, name+"_"+i,resolutionDPI, sheet, sheetSize));
                 i++;
