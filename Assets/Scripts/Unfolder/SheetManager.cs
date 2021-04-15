@@ -13,7 +13,7 @@ public class SheetManager : MonoBehaviour
     public bool logoActive = true;
 
     // Start is called before the first frame update
-    void Awake()
+    void Start()
     {
         var textShader = Resources.Load("Shader/OneSideTextShader", typeof(Shader)) as Shader;
 
@@ -30,7 +30,7 @@ public class SheetManager : MonoBehaviour
     void Update()
     {
         logo.gameObject.SetActive(logoActive);
-        if (scales == null) Awake();
+        if (scales == null) Start();
         float ratio = transform.localScale.y * scale.x / (transform.localScale.x * scale.y);
         foreach (var textMesh in scales.Keys)
         {

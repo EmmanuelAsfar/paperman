@@ -30,7 +30,7 @@ namespace Unfolder {
         [Range(3, 100)]
         public float modelSize = 40f; // Size of the target model (diagonal)
         [Range(0, 5)]
-        public float explodeAmount = 0.5f; // Size of the target model (diagonal)
+        public float explodeAmount = 0.5f;
 
         // Pour nesting and layout
         [Range(0.1f, 1)]
@@ -152,9 +152,10 @@ namespace Unfolder {
             mainPanel.PageHeight.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
             mainPanel.WidthMargin.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
             mainPanel.HeightMargin.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
-            mainPanel.SortColors.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
             mainPanel.Title.RegisterValueChangedCallback(x => { UpdateMainPage(); });
             mainPanel.Author.RegisterValueChangedCallback(x => { UpdateMainPage(); });
+
+            mainPanel.SortColors.RegisterValueChangedCallback(x => { requireRecompute = true; UpdateParametersPanel(); });
             mainPanel.TargetFaces.RegisterValueChangedCallback(x => UpdateParametersPanel());
             mainPanel.CreatePNG.RegisterValueChangedCallback(x => UpdateParametersPanel());
             mainPanel.CreatePDF.RegisterValueChangedCallback(x => UpdateParametersPanel());
@@ -164,6 +165,15 @@ namespace Unfolder {
             taskProgress.Ok("Ready", 0);
 
             UpdateParametersPanel();
+        }
+
+        private void Start()
+        {
+            SetViewMode(ViewMode.Model);
+            ImportModelFromFile(true);
+            UpdateModelSize(modelSize);
+            UpdateParametersPanel();
+            UpdateExplodeLevel(explodeAmount);
         }
 
         private void ApplySwatch()
@@ -188,16 +198,9 @@ namespace Unfolder {
             requireRecompute = true;
         }
 
-        private void Start()
-        {
-            SetViewMode(ViewMode.Model);
-            ImportModelFromFile(true);
-            UpdateModelSize(modelSize);
-            UpdateExplodeLevel(explodeAmount);
-        }
-
         private void UpdateProgressBar()
         {
+            mainPanel.ControlPanel.SetEnabled(!taskProgress.IsComputing());
             mainPanel.Cancel.SetEnabled(taskProgress.IsComputing());
             mainPanel.ProgressMessage.text = taskProgress.GetProgressMessage();
             if (taskProgress.taskStatus == TaskProgress.Status.Error) mainPanel.ProgressAmount.style.backgroundColor = errorColor;
@@ -218,7 +221,6 @@ namespace Unfolder {
         private void UpdateParametersPanel()
         {
             explodeAmount = mainPanel.ExplodeAmount.value;
-            modelSize = mainPanel.ModelSize.value;
             acceptMixedMaterials = !mainPanel.SortColors.value;
             createPNG = mainPanel.CreatePNG.value;
             createPDF = mainPanel.CreatePDF.value;
@@ -227,9 +229,8 @@ namespace Unfolder {
             targetFaces = (int)mainPanel.TargetFaces.value;
             sheetSize = new Vector2(mainPanel.PageWidth.value / 10f, mainPanel.PageHeight.value / 10f);
             sheetMargin = new Vector2(mainPanel.WidthMargin.value / 10f, mainPanel.HeightMargin.value / 10f);
+
             mainPanel.FaceCount.text = currentModel == null ? "" : "(currently " + currentFaces+" faces)";;
-            
-            
             mainPanel.RotateModel.visible = (mode == ViewMode.Model || mode == ViewMode.ModelRender) && currentModel != null;
             mainPanel.ExplodeAmount.visible = mode == ViewMode.Model3D;
 
@@ -251,8 +252,6 @@ namespace Unfolder {
             mainPanel.View2DBack.style.backgroundColor = (mode == ViewMode.Model2D && backView) ? activeColor : passiveColor;
             mainPanel.View25D.style.backgroundColor = mode == ViewMode.Model25D ? activeColor : passiveColor;
             mainPanel.ViewMainPage.style.backgroundColor = mode == ViewMode.ModelRender ? activeColor : passiveColor;
-
-            mainPanel.ControlPanel.SetEnabled(!taskProgress.IsComputing());
 
             mainPanel.UpdateSwatch();
             UpdateProgressBar();
@@ -448,11 +447,13 @@ namespace Unfolder {
                     }
                     current3DModel = currentPattern.Build3DPatternObject();
                     PlaceIn3DViewer(current3DModel);
+                    UpdateExplodeLevel(explodeAmount);
                     SetViewMode(ViewMode.Model3D);
                 } catch (Exception ex)
                 {
                     Debug.Log(ex);
                     taskProgress.Error("Error while creating artcraft preview - "+ex.Message, 1);
+                    requestUnfold = false;
                     DestroyArtcrafts();
                 }
             }
@@ -478,11 +479,7 @@ namespace Unfolder {
                     DestroyArtcrafts();
                 }
             }
-
-            UpdateParametersPanel();
-            UpdateModelSize(modelSize);
-            UpdateExplodeLevel(explodeAmount);
-            UpdateMainPage();
+            UpdateProgressBar();
         }
 
         public void LateUpdate()
@@ -569,13 +566,14 @@ namespace Unfolder {
 
         private void UpdateModelSize(float newModelSize)
         {
-            if (modelSize != newModelSize) requireRecompute = true;
+            requireRecompute = true;
             modelSize = newModelSize;
             if (currentModel == null) return;
             Bounds b = UnityUtil.GetMaxBounds(currentModel);
             float ratio = modelSize / ((b.max - b.min).magnitude + 1E-5f);
             currentModel.transform.localScale *= ratio;
             PlaceIn3DViewer(currentModel);
+            UpdateParametersPanel();
         }
 
         public void UpdateExplodeLevel(float newExplodeAmount)
@@ -619,6 +617,7 @@ namespace Unfolder {
             if (current25DModel != null) current25DModel.SetActive(mode == ViewMode.Model25D);
 
             UpdateParametersPanel();
+            UpdateMainPage();
             UpdateCameraView();
         }
     }
