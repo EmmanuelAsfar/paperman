@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Web;
 using UnityEngine;
 
 public class CustomAssetImporter
@@ -31,8 +32,10 @@ public class CustomAssetImporter
     {
         if (File.Exists(modelPath))
         {
-            Scene scene = importer.ImportFile(modelPath, postProcessSteps);
-
+            String rootPath = Path.GetDirectoryName(modelPath);
+            var fios = new FileIOSystem(new string[] { rootPath });
+            importer.SetIOSystem(fios);
+            Scene scene = importer.ImportFile(Path.GetFileName(modelPath), postProcessSteps);
             if (scene != null)
             {
                 Debug.Log("Model Successfully Loaded");

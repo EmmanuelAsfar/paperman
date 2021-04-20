@@ -17,17 +17,18 @@ namespace Unfolder
             return Math.Round(progressAmount * 100) + "% " + (isComputing ? "(In progress)" : "") + " - " + progressMessage;
         }
 
-        public void Error(String message)
+        public void Error(String message, Exception ex = null)
         {
+            UnityEngine.Debug.LogError(message + ex?.StackTrace);
             this.progressMessage = message;
             this.taskStatus = Status.Error;
             if (progressAmount == 0) progressAmount = 1;
             hasChanged = true;
         }
 
-        public void Error(String message, float progressAmount)
+        public void Error(String message, float progressAmount, Exception ex = null)
         {
-            Error(message);
+            Error(message, ex);
             this.progressAmount = progressAmount;
         }
 

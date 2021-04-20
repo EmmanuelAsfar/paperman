@@ -259,44 +259,53 @@ namespace Unfolder {
 
         private void ImportModelFromFile(bool loadDefault)
         {
-            GameObject newModel;
-            if (loadDefault) {
-                return;
-                //newModel = ModelLoader.LoadModel(Path.Combine(Application.dataPath, "Resources/DefaultModel.dae"));
-            } else {
-                taskProgress.Ok("Picking a model file", 0);
-                String filePath = UnityUtil.ChooseFile(loadPath);
-                if (filePath == null)
+            try
+            {
+                GameObject newModel;
+                if (loadDefault)
                 {
-                    taskProgress.Warning("No model file selected", 1);
                     return;
+                    //newModel = ModelLoader.LoadModel(Path.Combine(Application.dataPath, "Resources/DefaultModel.dae"));
                 }
-                loadPath = Path.GetDirectoryName(filePath);
-                modelName = Path.GetFileNameWithoutExtension(filePath);
-                newModel = ModelLoader.LoadModel(filePath);
-                if (newModel == null)
+                else
                 {
-                    taskProgress.Error("Model loading failed : "+ filePath, 1);
-                    return;
+                    taskProgress.Ok("Picking a model file", 0);
+                    String filePath = UnityUtil.ChooseFile(loadPath);
+                    if (filePath == null)
+                    {
+                        taskProgress.Warning("No model file selected", 1);
+                        return;
+                    }
+                    loadPath = Path.GetDirectoryName(filePath);
+                    modelName = Path.GetFileNameWithoutExtension(filePath);
+                    newModel = ModelLoader.LoadModel(filePath);
+                    if (newModel == null)
+                    {
+                        taskProgress.Error("Model loading failed : " + filePath, 1);
+                        return;
+                    }
                 }
+                mainPanel.Title.value = modelName;
+                DestroyImmediate(originalModel);
+                DestroyImmediate(currentModel);
+                originalModel = newModel;
+                //UnityUtil.Merge(originalModel);
+                originalModel.SetActive(false);
+                currentModel = Instantiate(originalModel);
+                originalModel.SetActive(false);
+                currentModel.name = originalModel.name + "_";
+                currentModel.SetActive(true);
+                UnityUtil.Merge(currentModel);
+                UnityUtil.SplitTriangles(currentModel);
+                //UnityUtil.ApplyOutline(currentModel);
+                originalFaces = UnityUtil.CountFaces(currentModel);
+                palette.AddSwatch(UnityUtil.GetSwatch(currentModel), true);
+                UpdateCurrentModel();
+                taskProgress.Ok("Model " + modelName + " loaded", 1);
+            } catch (Exception ex)
+            {
+                taskProgress.Error("Error loading model : "+ex.Message, 1);
             }
-            mainPanel.Title.value = modelName;
-            DestroyImmediate(originalModel);
-            DestroyImmediate(currentModel);
-            originalModel = newModel;
-            //UnityUtil.Merge(originalModel);
-            originalModel.SetActive(false);
-            currentModel = Instantiate(originalModel);
-            originalModel.SetActive(false);
-            currentModel.name = originalModel.name + "_";
-            currentModel.SetActive(true);
-            UnityUtil.Merge(currentModel);
-            UnityUtil.SplitTriangles(currentModel);
-            //UnityUtil.ApplyOutline(currentModel);
-            originalFaces = UnityUtil.CountFaces(currentModel);
-            palette.AddSwatch(UnityUtil.GetSwatch(currentModel), true);
-            UpdateCurrentModel();
-            taskProgress.Ok("Model "+ modelName+ " loaded", 1);
         }
 
         private void ReduceMesh()
