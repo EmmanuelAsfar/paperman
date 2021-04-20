@@ -19,11 +19,11 @@ public class CustomAssetImporter
     {
         // Import Settings
         importer = new Assimp.AssimpContext();
+
         importer.SetConfig(new Assimp.Configs.MeshVertexLimitConfig(60000));
         importer.SetConfig(new Assimp.Configs.MeshTriangleLimitConfig(60000));
         importer.SetConfig(new Assimp.Configs.RemoveDegeneratePrimitivesConfig(true));
         importer.SetConfig(new Assimp.Configs.SortByPrimitiveTypeConfig(Assimp.PrimitiveType.Line | Assimp.PrimitiveType.Point));
-
         postProcessSteps = Assimp.PostProcessPreset.TargetRealTimeMaximumQuality | Assimp.PostProcessSteps.MakeLeftHanded | Assimp.PostProcessSteps.FlipWindingOrder;
     }
 
@@ -56,6 +56,7 @@ public class CustomAssetImporter
         if (assImpScene == null) return null;
         foreach (var material in assImpScene.Materials)
         {
+            // TODO Sortir le find Material
             UnityEngine.Material mat = new UnityEngine.Material(Shader.Find("Standard"));
             if (material.HasName) mat.name = material.Name;
             if (material.HasColorAmbient) mat.SetColor("_Color", Convert(material.ColorAmbient));

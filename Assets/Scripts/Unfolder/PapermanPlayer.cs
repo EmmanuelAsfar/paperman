@@ -111,6 +111,7 @@ namespace Unfolder {
 
         public MainControlPanel mainPanel;
         private ColorPalette palette;
+        private ModelPainter painter;
 
         private VisualElement rootPanel;
         public GameObject viewer2D, viewer3D, viewer25D;
@@ -139,6 +140,13 @@ namespace Unfolder {
             mainPanel.A4Size.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(A4Size, StandardMargins));
             mainPanel.A3Size.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(A3Size, StandardMargins));
             mainPanel.LetterSize.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(LetterSize, StandardMargins));
+
+            mainPanel.colorButtons[0].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(0));
+            mainPanel.colorButtons[1].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(1));
+            mainPanel.colorButtons[2].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(2));
+            mainPanel.colorButtons[3].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(3));
+            mainPanel.colorButtons[4].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(4));
+            mainPanel.colorButtons[5].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(5));
 
             mainPanel.ModelSize.RegisterValueChangedCallback(x => UpdateModelSize(x.newValue));
             mainPanel.ExplodeAmount.RegisterValueChangedCallback(x => UpdateExplodeLevel(x.newValue));
@@ -187,14 +195,21 @@ namespace Unfolder {
             UnityUtil.ApplySwatch(current25DModel, subMeshCount, palette.GetSwatch());
         }
 
+        private void UpdatePainterMaterial(int materialIndex)
+        {
+            if (painter == null) return;
+            painter.currentMaterialIndex = materialIndex;
+            UpdateParametersPanel();
+        }
+
         private void UpdatePageSetup(Vector2 sheetSize, Vector2 sheetMargin)
         {
             this.sheetSize = sheetSize;
             this.sheetMargin = sheetMargin;
-            mainPanel.PageWidth.value = (int)(sheetSize.x*10);
-            mainPanel.PageHeight.value = (int)(sheetSize.y*10);
-            mainPanel.WidthMargin.value = (int)(sheetMargin.x*10);
-            mainPanel.HeightMargin.value = (int)(sheetMargin.y*10);
+            mainPanel.PageWidth.value = sheetSize.x*10f;
+            mainPanel.PageHeight.value = sheetSize.y*10f;
+            mainPanel.WidthMargin.value = sheetMargin.x*10f;
+            mainPanel.HeightMargin.value = sheetMargin.y*10f;
             requireRecompute = true;
         }
 
@@ -253,6 +268,13 @@ namespace Unfolder {
             mainPanel.View25D.style.backgroundColor = mode == ViewMode.Model25D ? activeColor : passiveColor;
             mainPanel.ViewMainPage.style.backgroundColor = mode == ViewMode.ModelRender ? activeColor : passiveColor;
 
+            mainPanel.A4Size.style.backgroundColor = sheetSize == A4Size ? activeColor : passiveColor;
+            mainPanel.A3Size.style.backgroundColor = sheetSize == A3Size ? activeColor : passiveColor;
+            mainPanel.LetterSize.style.backgroundColor = sheetSize == LetterSize ? activeColor : passiveColor;
+
+            for (int i = 0; i < mainPanel.colorButtons.Length; i++)
+                mainPanel.colorButtons[i].text = painter?.currentMaterialIndex == i ? "X" : "";
+
             mainPanel.UpdateSwatch();
             UpdateProgressBar();
         }
@@ -292,6 +314,8 @@ namespace Unfolder {
             currentModel.SetActive(true);
             UnityUtil.Merge(currentModel);
             UnityUtil.SplitTriangles(currentModel);
+            currentModel.AddComponent<MeshCollider>();
+            painter = currentModel.AddComponent<ModelPainter>();
             //UnityUtil.ApplyOutline(currentModel);
             originalFaces = UnityUtil.CountFaces(currentModel);
             palette.AddSwatch(UnityUtil.GetSwatch(currentModel), true);

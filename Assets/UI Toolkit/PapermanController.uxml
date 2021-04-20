@@ -29,8 +29,8 @@
                         <ui:Label text="3. Simplify your model&#10;" display-tooltip-when-elided="true" style="-unity-font-style: bold; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; -unity-text-align: middle-left;" />
                         <ui:Label text="(currently 850 faces)" display-tooltip-when-elided="true" name="FaceCount" style="flex-wrap: wrap; -unity-text-align: middle-left; padding-left: 5px;" />
                     </ui:VisualElement>
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:Slider picking-mode="Ignore" label="Reduce face count to" value="300" high-value="1000" inverted="false" low-value="50" direction="Horizontal" usage-hints="None" tooltip="Select the target number of faces for your model" name="TargetFaces" show-input-field="true" focusable="true" page-size="1" style="justify-content: flex-end; align-items: flex-start; flex-direction: column; flex-wrap: nowrap; flex-shrink: 1; flex-grow: 1;" />
+                    <ui:VisualElement style="flex-direction: row-reverse; justify-content: space-between;">
+                        <ui:Slider picking-mode="Ignore" label="Simplification level" value="300" high-value="1000" inverted="true" low-value="50" direction="Horizontal" usage-hints="None" tooltip="Select the target number of faces for your model" name="TargetFaces" show-input-field="false" focusable="true" page-size="1" style="justify-content: space-between; align-items: stretch; flex-direction: column; flex-wrap: nowrap; flex-shrink: 1; flex-grow: 1;" />
                         <ui:Button text="Simplify my model" display-tooltip-when-elided="true" name="ReduceMesh" style="justify-content: space-between;" />
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -89,7 +89,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement style="flex-grow: 1; align-items: flex-end; justify-content: space-between; flex-direction: column; padding-left: 8px; padding-right: 8px; padding-top: 8px; padding-bottom: 8px;">
-                <ui:Slider picking-mode="Ignore" label="Explode preview" value="5" high-value="50" name="ExplodeAmount" show-input-field="false" direction="Vertical" page-size="0.1" focusable="false" style="flex-direction: column; height: 50%; align-items: center;" />
+                <ui:Slider picking-mode="Ignore" label="Explode preview" value="4" high-value="50" name="ExplodeAmount" show-input-field="false" direction="Vertical" page-size="0.1" focusable="false" style="flex-direction: column-reverse; height: 50%; align-items: flex-end; visibility: visible; overflow: visible; flex-grow: 1; flex-shrink: 1; -unity-text-align: upper-right; font-size: 12px; -unity-font-style: bold; justify-content: flex-end; padding-bottom: 10px; padding-left: 10px;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Dummiesman;
 using Parabox.Stl;
 using UnityEngine;
 
@@ -27,6 +28,13 @@ public class ModelLoader
 
     public static GameObject LoadModel(String path)
     {
+        //if (Path.GetExtension(path).ToLowerInvariant().Equals(".obj"))
+        //{
+        //    GameObject ob = new OBJLoader().Load(path);
+        //    if (ob == null) return null;
+        //    ob.name = Path.GetFileNameWithoutExtension(path);
+        //    return ob;
+        //}
         var importer = new CustomAssetImporter();
         Material material = Resources.Load("Material/DefaultMaterial", typeof(Material)) as Material;
         GameObject object3D = importer.LoadModel(path, material, true, true);
