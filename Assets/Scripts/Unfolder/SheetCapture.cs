@@ -24,14 +24,13 @@ public class SheetCapture
 
     public static String CaptureMainPage(String path, String name, float resolutionDPI, Vector2 sheetSize)
     {
-        Camera orbitCamera = GameObject.Find("OrbitCamera").GetComponent<Camera>();
-        var paths = new List<String>();
+        Camera renderCamera = GameObject.Find("Render3DCamera").GetComponent<Camera>();
         String extension = ".png";
         float pixelPerCm = resolutionDPI / 2.54f;
-        int width = (int)(sheetSize.x * pixelPerCm);
-        int height = (int)(sheetSize.y * pixelPerCm);
+        int width = (int)Math.Round(sheetSize.x * pixelPerCm);
+        int height = (int)Math.Round(sheetSize.y * pixelPerCm);
         String filePath = Path.Combine(path, name + extension);
-        Capture(orbitCamera, filePath, width, height);
+        Capture(renderCamera, filePath, width, height);
         return filePath;
     }
 

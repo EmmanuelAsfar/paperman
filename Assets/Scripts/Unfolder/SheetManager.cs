@@ -22,7 +22,7 @@ public class SheetManager : MonoBehaviour
         {
             textMesh.GetComponent<MeshRenderer>().material.shader = textShader;
             scales.Add(textMesh, textMesh.transform.localScale);
-            scale =  transform.localScale;
+            scale =  Vector3.one;
         }
     }
 
