@@ -1,0 +1,86 @@
+solid pave-texture
+facet normal 0.0 -1.0 0.0
+  outer loop
+    vertex 1865.0000000000018 0.0 2000.9999999999752
+    vertex 0.0 0.0 0.0
+    vertex 1865.0000000000018 0.0 0.0
+  endloop
+endfacet
+facet normal 0.0 -1.0 0.0
+  outer loop
+    vertex 0.0 0.0 0.0
+    vertex 1865.0000000000018 0.0 2000.9999999999752
+    vertex 0.0 0.0 2000.9999999999752
+  endloop
+endfacet
+facet normal -1.0 0.0 0.0
+  outer loop
+    vertex 0.0 4085.0000000000136 2000.9999999999752
+    vertex 0.0 0.0 0.0
+    vertex 0.0 0.0 2000.9999999999752
+  endloop
+endfacet
+facet normal -1.0 0.0 0.0
+  outer loop
+    vertex 0.0 0.0 0.0
+    vertex 0.0 4085.0000000000136 2000.9999999999752
+    vertex 0.0 4085.0000000000136 0.0
+  endloop
+endfacet
+facet normal -0.0 1.0 -0.0
+  outer loop
+    vertex 0.0 4085.0000000000136 2000.9999999999752
+    vertex 1865.0000000000018 4085.0000000000136 0.0
+    vertex 0.0 4085.0000000000136 0.0
+  endloop
+endfacet
+facet normal -0.0 1.0 -0.0
+  outer loop
+    vertex 1865.0000000000018 4085.0000000000136 0.0
+    vertex 0.0 4085.0000000000136 2000.9999999999752
+    vertex 1865.0000000000018 4085.0000000000136 2000.9999999999752
+  endloop
+endfacet
+facet normal -0.0 -0.0 1.0
+  outer loop
+    vertex 1865.0000000000018 0.0 2000.9999999999752
+    vertex 0.0 4085.0000000000136 2000.9999999999752
+    vertex 0.0 0.0 2000.9999999999752
+  endloop
+endfacet
+facet normal -0.0 -0.0 1.0
+  outer loop
+    vertex 0.0 4085.0000000000136 2000.9999999999752
+    vertex 1865.0000000000018 0.0 2000.9999999999752
+    vertex 1865.0000000000018 4085.0000000000136 2000.9999999999752
+  endloop
+endfacet
+facet normal 1.0 -0.0 -0.0
+  outer loop
+    vertex 1865.0000000000018 4085.0000000000136 0.0
+    vertex 1865.0000000000018 0.0 2000.9999999999752
+    vertex 1865.0000000000018 0.0 0.0
+  endloop
+endfacet
+facet normal 1.0 -0.0 -0.0
+  outer loop
+    vertex 1865.0000000000018 0.0 2000.9999999999752
+    vertex 1865.0000000000018 4085.0000000000136 0.0
+    vertex 1865.0000000000018 4085.0000000000136 2000.9999999999752
+  endloop
+endfacet
+facet normal 0.0 0.0 -1.0
+  outer loop
+    vertex 1865.0000000000018 4085.0000000000136 0.0
+    vertex 0.0 0.0 0.0
+    vertex 0.0 4085.0000000000136 0.0
+  endloop
+endfacet
+facet normal 0.0 0.0 -1.0
+  outer loop
+    vertex 0.0 0.0 0.0
+    vertex 1865.0000000000018 4085.0000000000136 0.0
+    vertex 1865.0000000000018 0.0 0.0
+  endloop
+endfacet
+endsolid pave-texture

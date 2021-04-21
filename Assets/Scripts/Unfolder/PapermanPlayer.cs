@@ -141,8 +141,8 @@ namespace Unfolder {
             mainPanel.A3Size.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(A3Size, StandardMargins));
             mainPanel.LetterSize.RegisterCallback<ClickEvent>(ev => UpdatePageSetup(LetterSize, StandardMargins));
 
-            mainPanel.colorButtons[0].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(0));
-            mainPanel.colorButtons[1].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(1));
+            mainPanel.colorButtons[0].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(0)); // TODO Faire mieux !
+            mainPanel.colorButtons[1].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(1)); // Remplacer par des textures
             mainPanel.colorButtons[2].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(2));
             mainPanel.colorButtons[3].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(3));
             mainPanel.colorButtons[4].RegisterCallback<ClickEvent>(ev => UpdatePainterMaterial(4));
@@ -341,11 +341,11 @@ namespace Unfolder {
             currentModel.name = originalModel.name + "_";
             int faceBefore = UnityUtil.CountFaces(currentModel);
             float reduceFactor = (1.0f * targetFaces) / faceBefore;
-            if (reduceFactor < 0.01)
-            {
-                UnityUtil.ReducePoly(currentModel, 0.01f, angleNoFold);
-                reduceFactor *= 100;
-            }
+            //if (reduceFactor < 0.01)
+            //{
+            //    UnityUtil.ReducePoly(currentModel, 0.01f, angleNoFold);
+            //    reduceFactor *= 100;
+            //}
             UnityUtil.ReducePoly(currentModel, reduceFactor, angleNoFold);
             UnityUtil.SplitTriangles(currentModel);
             //UnityUtil.ApplyOutline(currentModel);
@@ -359,6 +359,7 @@ namespace Unfolder {
             if (originalModel == null) return;
             originalModel.transform.Rotate(Vector3.right, 90);
             currentModel.transform.Rotate(Vector3.right, 90);
+            PlaceIn3DViewer(currentModel);
             taskProgress.Ok("Model rotated of 90°");
         }
 

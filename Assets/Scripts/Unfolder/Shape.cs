@@ -783,10 +783,6 @@ namespace Unfolder
                     float xy1Angle = (180 + border1.GetAngle(border1.GetFirstOppositeSide())) / 2;
                     float xy2Angle = (180 + border2.GetAngle(border2.GetFirstOppositeSide())) / 2;
 
-                    if (xy1Angle > 90 || xy2Angle > 90)
-                    {
-                        Debug.Log("" + xy1Angle);
-                    }
 
                     if (!IsBorder(side) && !insideFlatPoly.Contains(side))
                     {

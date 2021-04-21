@@ -28,9 +28,11 @@ public class ModelLoader
 
     public static GameObject LoadModel(String path)
     {
+        // TODO Comprendre pourquoi modèle eclaté est inversé
         //if (Path.GetExtension(path).ToLowerInvariant().Equals(".obj"))
         //{
-        //    GameObject ob = new OBJLoader().Load(path);
+        //    var ol = new OBJLoader();
+        //    GameObject ob = ol.Load(path);
         //    if (ob == null) return null;
         //    ob.name = Path.GetFileNameWithoutExtension(path);
         //    return ob;

@@ -24,8 +24,9 @@ public class CustomAssetImporter
         importer.SetConfig(new Assimp.Configs.MeshVertexLimitConfig(60000));
         importer.SetConfig(new Assimp.Configs.MeshTriangleLimitConfig(60000));
         importer.SetConfig(new Assimp.Configs.RemoveDegeneratePrimitivesConfig(true));
+        importer.SetConfig(new Assimp.Configs.FBXImportAllMaterialsConfig(true));
         importer.SetConfig(new Assimp.Configs.SortByPrimitiveTypeConfig(Assimp.PrimitiveType.Line | Assimp.PrimitiveType.Point));
-        postProcessSteps = Assimp.PostProcessPreset.TargetRealTimeMaximumQuality | Assimp.PostProcessSteps.MakeLeftHanded | Assimp.PostProcessSteps.FlipWindingOrder;
+        postProcessSteps = Assimp.PostProcessPreset.TargetRealTimeMaximumQuality | Assimp.PostProcessSteps.RemoveComponent | Assimp.PostProcessSteps.MakeLeftHanded | Assimp.PostProcessSteps.FlipWindingOrder;
     }
 
     Scene ImportModel(string modelPath)
